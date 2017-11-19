@@ -68,11 +68,7 @@ G_EXP UINT mg_sep_buffer_idx;
  */
 G_EXP UINT mg_cmd_buffer_idx;
 
-
 G_EXP void init_globals(void);
-
-
-G_EXP UCHAR APP_CONFIG_VERBOSE;
 
 G_EXP UINT mg_sep_buffer_idx;
 G_EXP UINT mg_cmd_buffer_idx;

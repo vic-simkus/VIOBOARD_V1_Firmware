@@ -416,11 +416,11 @@ UCHAR cmd_print_cal_values()
 
 	if (cal_lev == '1')
 	{
-		get_l1_cal_values();
+		update_l1_cal_values();
 	}
 	else if (cal_lev == '2')
 	{
-		get_l2_cal_values();
+		update_l2_cal_values();
 	}
 	else
 	{
@@ -561,11 +561,11 @@ UCHAR cmd_set_cal(void)
 
 	if (level == 1)
 	{
-		get_l1_cal_values();
+		update_l1_cal_values();
 	}
 	else
 	{
-		get_l2_cal_values();
+		update_l2_cal_values();
 	}
 
 	IOC_CAL_VALUES[input_num] = 0;

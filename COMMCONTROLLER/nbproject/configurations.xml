@@ -7,7 +7,6 @@
       <logicalFolder name="include" displayName="include" projectFiles="true">
         <itemPath>include/rtcc.h</itemPath>
         <itemPath>include/outputs.h</itemPath>
-        <itemPath>include/inputs.h</itemPath>
         <itemPath>include/iocontroller_interface.h</itemPath>
         <itemPath>include/cp_ic.h</itemPath>
         <itemPath>include/globals.h</itemPath>
@@ -15,6 +14,7 @@
         <itemPath>include/command_processor.h</itemPath>
         <itemPath>include/chip_config.h</itemPath>
         <itemPath>include/config.h</itemPath>
+        <itemPath>include/cp_bcc.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -24,6 +24,7 @@
     <logicalFolder name="f1" displayName="Misc" projectFiles="true">
       <itemPath>LICENSE.TXT</itemPath>
       <itemPath>Doxyfile</itemPath>
+      <itemPath>dist/PIC24FV32KA302/debug/COMMCONTROLLER.debug.map</itemPath>
     </logicalFolder>
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
@@ -47,6 +48,7 @@
   <sourceRootList>
     <Elem>include</Elem>
     <Elem>src</Elem>
+    <Elem>dist/PIC24FV32KA302/debug</Elem>
   </sourceRootList>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -224,7 +226,7 @@
         <property key="preserve-all" value="false"/>
         <property key="preserve-file" value=""/>
         <property key="relaxed-math" value="false"/>
-        <property key="save-temps" value="false"/>
+        <property key="save-temps" value="true"/>
       </C30Global>
       <ICD3PlatformTool>
         <property key="ADC 1" value="true"/>

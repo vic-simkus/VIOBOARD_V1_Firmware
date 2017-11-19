@@ -23,6 +23,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "I2C/i2c.h"
 #include "I2C/simkus_net.h"
 
+#include <xc.h>
+#include <libpic30.h>
+
 /*
  * Used for reading statuses from the IOCONTROLLER.
  * Analog values are the bulkiest as each input is two bytes.  There are 8 analog inputs for a total of 16 bytes.
@@ -31,9 +34,10 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define WORK_BUFFER_SIZE 32
 
 static UCHAR work_buffer[WORK_BUFFER_SIZE];
+
 static UINT make_int(UCHAR _msb, UCHAR _lsb);
 
-UCHAR set_cal_value(UCHAR _cmd)
+UCHAR set_cal_values(UCHAR _cmd)
 {
 	mem_clear(work_buffer,WORK_BUFFER_SIZE);
 	UCHAR ret = 1;
@@ -50,7 +54,7 @@ UCHAR set_cal_value(UCHAR _cmd)
 	const i2c_result * i2c_res = sn_write(I2C_ADDR_IO_CTRL, work_buffer, (IOC_AI_COUNT * 2) + 1);
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to write calibration values.");
+		Nop();
 		ret = 0;
 		goto _end;
 	}
@@ -62,15 +66,15 @@ _end:
 
 UCHAR set_l1_cal_values(void)
 {
-	return set_cal_value(IOC_I2C_REG_SET_L1_CAL);
+	return set_cal_values(IOC_I2C_REG_SET_L1_CAL);
 }
 
 UCHAR set_l2_cal_values(void)
 {
-	return set_cal_value(IOC_I2C_REG_SET_L2_CAL);
+	return set_cal_values(IOC_I2C_REG_SET_L2_CAL);
 }
 
-UCHAR get_cal_values(UCHAR _cmd)
+UCHAR update_cal_values(UCHAR _cmd)
 {
 	UCHAR ret = 1;
 
@@ -84,7 +88,6 @@ UCHAR get_cal_values(UCHAR _cmd)
 
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to get calibration values.");
 		ret = 0;
 		goto _end;
 	}
@@ -100,14 +103,14 @@ _end:
 	return ret;
 }
 
-UCHAR get_l1_cal_values(void)
+UCHAR update_l1_cal_values(void)
 {
-	return get_cal_values(IOC_I2C_REG_GET_L1_CAL);
+	return update_cal_values(IOC_I2C_REG_GET_L1_CAL);
 }
 
-UCHAR get_l2_cal_values(void)
+UCHAR update_l2_cal_values(void)
 {
-	return get_cal_values(IOC_I2C_REG_GET_L2_CAL);
+	return update_cal_values(IOC_I2C_REG_GET_L2_CAL);
 }
 
 UINT get_boot_count(void)
@@ -122,7 +125,6 @@ UINT get_boot_count(void)
 
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to get boot count.");
 		ret = 0;
 		goto _end;
 	}
@@ -144,7 +146,6 @@ UCHAR set_digital_outputs(UCHAR _out)
 
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to set digital outputs.");
 		ret = 0;
 	}
 
@@ -162,7 +163,6 @@ UCHAR set_pmic_status(UCHAR _out)
 
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to set PMIC flags.");
 		ret = 0;
 	}
 
@@ -178,7 +178,7 @@ UCHAR get_digital_ouputs(void)
 
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to get digital output status.");
+		Nop();
 	}
 
 	return work_buffer[0];
@@ -193,7 +193,7 @@ UCHAR get_pmic_status(void)
 
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to get PMIC status.");
+		Nop();
 	}
 
 	return work_buffer[0];
@@ -211,7 +211,6 @@ UCHAR update_analog_readings(void)
 
 	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
 	{
-		logger_error("Failed to get analog input status.");
 		ret = 0;
 		goto __end_func;
 	}

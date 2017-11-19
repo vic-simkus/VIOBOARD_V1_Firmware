@@ -26,6 +26,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "globals.h"
 #include "iocontroller_interface.h"
 #include "cp_bcc.h"
+#include <xc.h>
+#include <libpic30.h>
 
 #include <string.h>
 
@@ -61,20 +63,6 @@ void init_command_processor(void)
 
 	mem_clear(&bin_context, sizeof (binary_message_context));
 
-	/*
-	#define IOC_I2C_REG_GET_AI 0x07
-	#define IOC_I2C_REG_GET_DO 0x08
-	#define IOC_I2C_REG_SET_DO 0x09
-	#define IOC_I2C_REG_GET_PMIC 0x0A
-	#define IOC_I2C_REG_SET_PMIC 0x0B
-	 *
-	#define IOC_I2C_REG_GET_L1_CAL 0x0C
-	#define IOC_I2C_REG_GET_L2_CAL 0x0D
-	#define IOC_I2C_REG_SET_L1_CAL 0x0E
-	#define IOC_I2C_REG_SET_L2_CAL 0x0F
-	#define IOC_I2C_REG_GET_BOOT_COUNT 0x10
-	 */
-
 	binary_command_callbacks[0] = bcc_reset;
 	binary_command_callbacks[1] = bcc_get_ai_status;
 	binary_command_callbacks[2] = bcc_get_do_status;
@@ -87,55 +75,57 @@ void init_command_processor(void)
 	binary_command_callbacks[9] = bcc_set_l2_cal_val;
 	binary_command_callbacks[10] = bcc_get_boot_count;
 
-
+	return;
 
 }
 
-void process_binary_command(void)
+UCHAR process_binary_command(void)
 {
-	/*
-	 * mg_command_buffer[0] == @
-	 * mg_command_buffer[1] == index of the call.
-	 */
-
+	UCHAR rc = 1;
 	if (bin_context.expected_length < 1)
 	{
-		logger_error("Invalid binary command; no index.");
-		return;
+		serial_protocol_errors.bin_cmd_no_index += 1;
+		rc = 0;
 	}
 
 	UCHAR call_index = mg_command_buffer[bin_context.start_index];
 
 	if (call_index >= BINARY_COMMAND_COUNT)
 	{
-		logger_error("Invalid binary command; index out of range.");
-		return;
+		serial_protocol_errors.bin_cmd_range += 1;
+		rc = 0;
 	}
 
-	ser_write_char(0x10);			// begin binary message
-	ser_write_char(call_index);		// the command this message is in response to.
+	BCC_BUFFER_ADD_BYTE(0x10);			// begin binary message
+	BCC_BUFFER_ADD_BYTE(call_index);		// the command this message is in response to.
 
 	/*
 	 * The command processing function will output the rest of the data into the stream.
 	 */
 	if (binary_command_callbacks[call_index]() != 1)
 	{
-		logger_error("Failed to execute command.");
+		serial_protocol_errors.bin_cmd_cb_fail += 1;
+		rc = 0;
 	}
 
+	if(!rc)
+	{
+		bin_context.output_buffer_idx = 0;
+		BCC_BUFFER_ADD_BYTE(0x10);			// begin binary message
+		BCC_BUFFER_ADD_BYTE(call_index);	// the command this message is in response to.
+		BCC_BUFFER_ADD_BYTE(0x00);			// Failure
+		BCC_BUFFER_ADD_WORD(0x01);
+		BCC_BUFFER_ADD_BYTE(0xFF);
+	}
+
+	ser_write_data(bin_context.output_buffer,bin_context.output_buffer_idx);
 	ser_flush_buffer();
 
-	return;
-
+	return 1;
 }
 
 void process_text_command(void)
 {
-	if (APP_CONFIG_VERBOSE)
-	{
-		ser_write_string("# processing command\n");
-	}
-
 	UCHAR command = 0;
 	UINT i = 0;
 	UINT i2 = 0;
@@ -206,18 +196,13 @@ void process_text_command(void)
 
 	if (fail == 1)
 	{
-		ser_write_string("! Invalid command: ");
+		ser_write_string("! IC: ");
 		ser_write_string(mg_command_buffer);
 		ser_write_char('\n');
 	}
 	else if (fail == 2)
 	{
-		ser_write_string("! Command failed\n");
-	}
-
-	if (APP_CONFIG_VERBOSE)
-	{
-		ser_write_string("# end of command process.\n\n");
+		ser_write_string("! CF\n");
 	}
 
 	ser_flush_buffer();

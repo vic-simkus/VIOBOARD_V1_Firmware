@@ -110,11 +110,13 @@ UCHAR get_pmic_status(void);
  */
 UCHAR set_pmic_status(UCHAR _out);
 
-UCHAR get_l1_cal_values(void);
-UCHAR get_l2_cal_values(void);
+UCHAR update_l1_cal_values(void);
+UCHAR update_l2_cal_values(void);
+UCHAR update_cal_values(UCHAR _cmd);
 
 UINT get_boot_count(void);
 
+UCHAR set_cal_values(UCHAR _cmd);
 UCHAR set_l1_cal_values(void);
 UCHAR set_l2_cal_values(void);
 

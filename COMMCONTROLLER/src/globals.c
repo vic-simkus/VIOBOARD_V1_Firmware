@@ -51,6 +51,4 @@ void init_globals(void)
 	IOC_IO_MAP[7] = 5;
 */
 
-	APP_CONFIG_VERBOSE = 1;
-
 }

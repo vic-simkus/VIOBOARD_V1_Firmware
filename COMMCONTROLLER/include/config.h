@@ -40,7 +40,7 @@ Various configuration parameters.  This file is used by all modules
  */
 #define TERM_WIDTH	120
 
-#define COMMAND_BUFFER_SIZE TERM_WIDTH
+#define COMMAND_BUFFER_SIZE 32
 #define COMMAND_SEPARATOR_BUFFER_SIZE COMMAND_BUFFER_SIZE / 4
 
 

@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "cp_bcc.h"
 #include "iocontroller_interface.h"
@@ -24,6 +24,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "I2C/simkus_net.h"
 
 extern binary_message_context bin_context;
+
+///XXX - Need to convert all these methods to use a buffer and call into the serial routines once rather than every byte
 
 UCHAR bcc_reset(void)
 {
@@ -39,32 +41,31 @@ UCHAR bcc_get_ai_status(void)
 	UCHAR rc = update_analog_readings();
 	UINT i = 0;
 
-	ser_write_char(rc);						// result code
-	ser_write_16bit((IOC_AI_COUNT * 2));	// length of payload
+	BCC_BUFFER_ADD_BYTE(rc);
+	BCC_BUFFER_ADD_WORD((IOC_AI_COUNT * 2));
 
 	for (i = 0; i < IOC_AI_COUNT; i++)
 	{
-		ser_write_16bit(IOC_AI_RAW_VALUES[i]);
+		BCC_BUFFER_ADD_WORD((IOC_AI_RAW_VALUES[i]));
 	}
-
 
 	return rc;
 }
 
 UCHAR bcc_get_do_status(void)
 {
-	ser_write_char(0x01);					// result code
-	ser_write_16bit(0x01);					// length of payload
-	ser_write_char(get_digital_ouputs());	// payload
+	BCC_BUFFER_ADD_BYTE(0x01);
+	BCC_BUFFER_ADD_WORD(0x01);
+	BCC_BUFFER_ADD_BYTE(get_digital_ouputs());
 
 	return 1;								// return success
 }
 
 UCHAR bcc_set_do_status(void)
 {
-	ser_write_char(0x01);					// result code
-	ser_write_16bit(0x01);					// length of payload
-	ser_write_char(0xff);					// dummy payload
+	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
+	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
 
 	set_digital_outputs(mg_command_buffer[bin_context.start_index + 1]);
 
@@ -73,44 +74,103 @@ UCHAR bcc_set_do_status(void)
 
 UCHAR bcc_get_pmic_status(void)
 {
-	ser_write_char(0x01);					// result code
-	ser_write_16bit(0x01);					// length of payload
-	ser_write_char(get_pmic_status());		// payload
+	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
+	BCC_BUFFER_ADD_BYTE(get_pmic_status());		// payload
+
 	return 1;								// return success
 }
 
 UCHAR bcc_set_pmic_status(void)
 {
-	ser_write_char(0x01);					// result code
-	ser_write_16bit(0x01);					// length of payload
-	ser_write_char(0xff);					// dummy payload
+	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
+	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
 
 	set_pmic_status(mg_command_buffer[bin_context.start_index + 1]);
 
 	return 1;								// return success
 }
 
+static UCHAR bcc_get_cal_values(UCHAR _cmd)
+{
+	UCHAR rc = update_cal_values(_cmd);
+
+	if (!rc)
+	{
+		BCC_BUFFER_ADD_BYTE(0x00);				//result code - fail
+	}
+	else
+	{
+		BCC_BUFFER_ADD_BYTE(0x01);				//result code - success
+	}
+
+	BCC_BUFFER_ADD_WORD((IOC_AI_COUNT * 2));	// Length of the payload
+
+	UCHAR i = 0;
+	for (i = 0; i < IOC_AI_COUNT; i++)
+	{
+		BCC_BUFFER_ADD_WORD(IOC_CAL_VALUES[i]);
+	}
+
+	return rc;
+}
+
+static UCHAR bcc_set_cal_values(UCHAR _cmd)
+{
+	UCHAR rc = 1;
+
+	if ((bin_context.count - 1) != (IOC_AI_COUNT * 2))	// subtract one from length for the call index.  Everything else should be 16 bytes of cal data (one word for each analog input.)
+	{
+		rc = 0;
+		goto _end;
+	}
+
+	UCHAR i = 0;
+
+	bin_context.start_index += 1;		// advance past the call i ndex.
+
+	for (i = 0; i < IOC_AI_COUNT; i++)
+	{
+		IOC_CAL_VALUES[i] = (mg_command_buffer[bin_context.start_index + (i * 2)] << 8 | mg_command_buffer[bin_context.start_index + (i * 2) + 1]);
+	}
+
+	rc = set_cal_values(_cmd);
+
+_end:
+
+	BCC_BUFFER_ADD_BYTE(rc);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
+	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
+
+	return rc;
+}
+
 UCHAR bcc_get_l1_cal_val(void)
 {
-	return 1;
+	return bcc_get_cal_values(IOC_I2C_REG_GET_L1_CAL);
 }
 
 UCHAR bcc_get_l2_cal_val(void)
 {
-	return 1;
+	return bcc_get_cal_values(IOC_I2C_REG_GET_L2_CAL);
 }
 
 UCHAR bcc_set_l1_cal_val(void)
 {
-	return 1;
+	return bcc_set_cal_values(IOC_I2C_REG_SET_L1_CAL);
 }
 
 UCHAR bcc_set_l2_cal_val(void)
 {
-	return 1;
+	return bcc_set_cal_values(IOC_I2C_REG_SET_L2_CAL);
 }
 
 UCHAR bcc_get_boot_count(void)
 {
+	BCC_BUFFER_ADD_BYTE(0x01);					// result code success
+	BCC_BUFFER_ADD_WORD(0x02);					// length of payload - one word
+	BCC_BUFFER_ADD_WORD(get_boot_count());		// write out the boot count
+
 	return 1;
 }

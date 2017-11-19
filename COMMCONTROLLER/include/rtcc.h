@@ -18,11 +18,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef __RTCC_H
 #define __RTCC_H
 
-#include "data_types.h"
-
 extern void rtcc_init(void);
-extern inline UINT rtcc_get_clicks(void);
-extern inline UINT rtcc_get_seconds(void);
 
-#undef __func_def
 #endif
