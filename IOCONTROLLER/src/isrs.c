@@ -46,6 +46,7 @@ void __attribute__((interrupt, no_auto_psv))  	_ADCInterrupt(void)
 	AD_BUFFER[6] = ADCBUF0;
 	AD_BUFFER[7] = ADCBUF1;
 
+
 	UCHAR i = 0;
 	for (i = 0; i < AD_INPUT_NUM; i++)
 	{

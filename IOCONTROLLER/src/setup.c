@@ -34,7 +34,7 @@ void setup_adc(void)
 	 * Configure the ADC parameters
 	 */
 	ADCON1bits.FORM = 0;		// unsigned integer format
-	ADCON1bits.SSRC = 0b111;	// internal counter
+	ADCON1bits.SSRC = 0b111;	// Conversion trigger source - internal counter
 
 	ADCON2bits.VCFG = 0b001;	// use VRef+ pin for VrefH and and AVss for VrefL
 	ADCON2bits.CSCNA = 1;		// scan inputs
@@ -42,7 +42,7 @@ void setup_adc(void)
 	ADCON2bits.ALTS = 0;		// Always use MUX A input settings
 	ADCON2bits.BUFM = 0;		// buffer configures as one 16 word buffer
 
-	ADCON3bits.SAMC = 0b11111;	// Auto sample time
+	ADCON3bits.SAMC = 0x0F;	// Auto sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
 	ADCON3bits.ADRC = 1;	// internal rc clock
 
 
@@ -249,7 +249,9 @@ void setup_i2c(void)
 	i2c_setup_default_registers();
 	setup_i2c_custom_registers();
 
-	i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 90);
+	//i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 90);
+	i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 0x00F);
+
 	sn_init(1000, 10);
 
 	/*

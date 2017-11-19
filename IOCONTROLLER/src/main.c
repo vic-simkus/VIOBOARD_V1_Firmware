@@ -122,7 +122,7 @@ int main(void)
 
 	AUX_LED = 0;
 
-	sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR*) "FROM IOCONTROLLER. IOCONTROLLER UP. COMMCONTROLLER SENSE_UP.");
+	sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR*) "F IC. IC UP. CC SU.");
 
 	UCHAR pmic_do_fault_sensed = 0;
 	UCHAR pmic_ai_fault_sensed = 0;
@@ -135,7 +135,7 @@ int main(void)
 			pmic_ai_fault_sensed = 1;
 			PWR_FAULT_AI_LED = 1;
 
-			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "FROM IOCONTROLLER. POWER_FAULT_SENSE AI.");
+			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "F IC. PFS AI.");
 		}
 		else if (pmic_ai_fault_sensed && !PWR_FAULT_AI)
 		{
@@ -143,7 +143,7 @@ int main(void)
 			pmic_ai_fault_sensed = 0;
 			PWR_FAULT_AI_LED = 0;
 
-			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "FROM IOCONTROLLER. POWER_FAULT_RESET AI.");
+			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "F IC. PFR AI.");
 		}
 
 		if (PWR_FAULT_DO && !pmic_do_fault_sensed)
@@ -152,7 +152,7 @@ int main(void)
 			pmic_do_fault_sensed = 1;
 			PWR_FAULT_DO_LED = 1;
 
-			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "FROM IOCONTROLLER. POWER_FAULT_SENSE DO.");
+			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "F IC. PFS DO.");
 		}
 		else if (pmic_do_fault_sensed && !PWR_FAULT_DO)
 		{
@@ -160,7 +160,7 @@ int main(void)
 			pmic_do_fault_sensed = 0;
 			PWR_FAULT_DO_LED = 0;
 
-			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "FROM IOCONTROLLER. POWER_FAULT_RESET DO.");
+			sn_ship_log(I2C_ADDR_COMM_CTRL, LOGGER_LEVEL_PROTOCOL, (UCHAR *) "F IC. PFR DO.");
 		}
 
 		if (eeprom_data.is_dirty)
@@ -168,6 +168,7 @@ int main(void)
 			/*
 			 * If calibration data has changed write it out.
 			 */
+
 			eeprom_writeout_data();
 		}
 
