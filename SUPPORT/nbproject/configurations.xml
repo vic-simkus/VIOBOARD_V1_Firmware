@@ -41,6 +41,7 @@
         <itemPath>src/calibration.c</itemPath>
         <itemPath>src/support_asm.s</itemPath>
         <itemPath>src/eeprom_utils.s</itemPath>
+        <itemPath>src/serial_comm_asm.S</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
@@ -122,7 +123,7 @@
         <property key="oXC16gcc-sfr-warn" value="false"/>
         <property key="oXC16gcc-smar-io-lvl" value="1"/>
         <property key="oXC16gcc-smart-io-fmt" value=""/>
-        <property key="optimization-level" value="0"/>
+        <property key="optimization-level" value="1"/>
         <property key="post-instruction-scheduling" value="default"/>
         <property key="pre-instruction-scheduling" value="default"/>
         <property key="preprocessor-macros" value=""/>
@@ -211,7 +212,7 @@
         <property key="preserve-all" value="false"/>
         <property key="preserve-file" value=""/>
         <property key="relaxed-math" value="false"/>
-        <property key="save-temps" value="false"/>
+        <property key="save-temps" value="true"/>
       </C30Global>
       <Simulator>
         <property key="codecoverage.enabled" value="Disable"/>
@@ -606,6 +607,8 @@
         <C30Global>
         </C30Global>
       </item>
+      <item path="src/serial_comm_asm.S" ex="true" overriding="false">
+      </item>
     </conf>
     <conf name="PIC24FV32KA302" type="3">
       <toolsSet>
@@ -763,7 +766,7 @@
         <property key="preserve-all" value="false"/>
         <property key="preserve-file" value=""/>
         <property key="relaxed-math" value="false"/>
-        <property key="save-temps" value="false"/>
+        <property key="save-temps" value="true"/>
       </C30Global>
       <Simulator>
         <property key="codecoverage.enabled" value="Disable"/>

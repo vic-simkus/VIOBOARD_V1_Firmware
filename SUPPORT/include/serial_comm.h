@@ -31,7 +31,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 	\see SER_IBS
 	\see SER_OBS
- 
+
  * \author Vidas Simkus (vic.simkus@simkus.com)
  */
 
@@ -41,14 +41,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 	Writes a character to the UART.  Output is buffered.
 	\return 1 if data was written to UART.  0 if an error was encountered; last write error will be set.
  */
-extern UINT ser_write_char(const UCHAR _c);
+inline extern UINT ser_write_char(const UCHAR _c);
 
 /**
  * Writes a 16 bit integers to the UART.  Output is buffered.
  * \param _i Integers to be written out.
  * \return 1 if data was written to UART.  0 if an error was encountered; last write error will be set.
  */
-extern UINT ser_write_16bit(const UINT _i);
+inline extern UINT ser_write_16bit(const UINT _i);
 
 /**
 	Writes a string to the UART.  The writes are buffered until end of string or as the buffer is filled up.
@@ -84,7 +84,7 @@ extern void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout
 /**
 	Return 1 if new data is available.  Otherwise 0 is returned.
  */
-extern UCHAR ser_new_data(void);
+inline extern UCHAR ser_new_data(void);
 
 /**
 	Flushes the output buffer to the UART.
@@ -118,13 +118,16 @@ Gets and resets the last read error.
  */
 extern UINT ser_last_read_error(void);
 
-/**
-Various error conditions that the library may encounter.
- */
-enum {
-	SER_ERR_NONE = 0,		/// No error
-	SER_ERR_R_OVERFLOW,		/// Overflow on read.  The read buffer is full.
-	SER_ERR_W_TIMEOUT		/// Time out on write.
-} ;
+extern volatile UINT scs_overflow_count;
+
+typedef struct
+{
+	UINT bin_cmd_no_index;
+	UINT bin_cmd_range;
+	UINT bin_cmd_cb_fail;
+	UINT cmd_proc_overflow;
+} ser_prot_errors;
+
+extern ser_prot_errors serial_protocol_errors;
 
 #endif

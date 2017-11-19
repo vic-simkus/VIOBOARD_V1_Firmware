@@ -38,6 +38,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define I2C_ADDR_COMM_CTRL	0x10
 #define I2C_ADDR_IO_CTRL	0x30
 
+typedef struct
+{
+	UINT write_errors;
+	UINT read_errors;
+	UINT collisions;
+} I2C_COMM_STATS;
+
+extern volatile I2C_COMM_STATS i2c_comm_stats;
+
 #ifdef __PIC24FV32KA302__
 
 /*
@@ -141,6 +150,8 @@ I2C Master will be reading from slave
 #ifndef I2C_SLAVE_REGISTER_COUNT
 #error "Must define I2C_SLAVE_REGISTER_COUNT"
 #endif
+
+#define I2C_BUS_RETRIES 10
 
 
 /**
@@ -314,13 +325,13 @@ extern void i2c_init(UCHAR _isr_priority, UCHAR _slave_address, UINT _brg);
  * Returns the last encountered read error and clears the last read error.
  * \return Last read error
  */
-extern SINT i2c_last_read_error(void);
+inline extern SINT i2c_last_read_error(void);
 
 /**
  * Returns the last encountered write error and clears the last write error.
  * \return Last write error
  */
-extern SINT i2c_last_write_error(void);
+inline extern SINT i2c_last_write_error(void);
 
 /**
  * Starts the I2C bus.  Sets the I2CCON.SEN to 1 and waits for the bit to clear.
@@ -329,7 +340,7 @@ extern SINT i2c_last_write_error(void);
  * This is a 'level 0' function and should not be used directly in user code.
  * \return Returns a 1 if operation was successful, 0 if a master bus collision (I2CSTAT.BCL) was detected.
  */
-extern UCHAR i2c_bus_start(void);
+inline extern UCHAR i2c_bus_start(void);
 
 /**
  * Restarts the I2C bus.  Sets the I2CCON.RSEN to 1 and waits for the bit to clear.
@@ -338,7 +349,7 @@ extern UCHAR i2c_bus_start(void);
  * \return Returns a 1 if operation was successful, 0 if a master bus collision (I2CSTAT.BCL) was detected.
  * This is a 'level 0' function and should not be used directly in user code.
  */
-extern UCHAR i2c_bus_restart(void);
+inline extern UCHAR i2c_bus_restart(void);
 
 /**
  * Stops the I2C bus.  Sets the I2CCON.PEN to 1 and waits for the bit to clear.
@@ -347,7 +358,7 @@ extern UCHAR i2c_bus_restart(void);
  * \return Returns a 1 if operation was successful, 0 if a master bus collision (I2CSTAT.BCL) was detected.
  * This is a 'level 0' function and should not be used directly in user code.
  */
-extern UCHAR i2c_bus_stop(void);
+inline extern UCHAR i2c_bus_stop(void);
 
 /**
 Writes a byte to the bus. This function will be called by the master as all slave writes are done in the slave ISR.
@@ -356,7 +367,7 @@ Waits for a clear bus before returning if no errors are encountered.
 \return 1 = operation successful (1 byte written), 0 = a collision occurred.
 \param _data_out byte to write
  */
-extern UCHAR i2c_write_byte(UCHAR _data_out);
+//extern UCHAR i2c_write_byte(UCHAR _data_out);
 
 /**
 Writes the control byte (address + rw) on the bus. This function will be called by the master as all slave writes are done in the slave ISR.
@@ -366,7 +377,7 @@ This is a 'level 1' function
 \param _addr 7 bit address in unmolested form.  The r/w bit will be accounted for by the function
 \param _restart 1 if a 'restart' rather then a 'start' should be emitted
  */
-extern UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart);
+inline extern UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart);
 
 /**
 Writes a buffer to the bus. This function will be called by the master as all slave writes are done in the slave ISR.

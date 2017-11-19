@@ -34,5 +34,16 @@ Input buffer size.  Since the input buffer is double buffered the actual size re
 Output buffer size.
  */
 #define SER_OBS 32
+
+
+/**
+ * Various error conditions that the library may encounter.
+ * We use defines because we reference these values in assembler code and it doesn't understand enums
+ */
+
+#define	SER_ERR_NONE		0		/// No error
+#define SER_ERR_R_OVERFLOW	1		/// Overflow on read.  The read buffer is full.
+#define SER_ERR_W_TIMEOUT	2		/// Time out on write.
+
 #endif
 

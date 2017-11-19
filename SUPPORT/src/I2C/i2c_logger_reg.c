@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 /*
  * Implements the I2C logger register functionality.
@@ -131,7 +131,12 @@ void i2c_logger_reg_init()
 
 UCHAR i2c_logger_flush(void)
 {
-	if(I2CSTATbits.S == 1)
+	if (I2CSTATbits.S == 1)
+	{
+		return 0;
+	}
+
+	if (i2c_logger_msg_end == 0)
 	{
 		return 0;
 	}
@@ -141,15 +146,6 @@ UCHAR i2c_logger_flush(void)
 	 */
 	__builtin_disi(0x3FFF);
 	{
-		/*
-		 * If an end of message has not been detected, do nothing.
-		 * Re-enable interrupts and bail.
-		 */
-		if (i2c_logger_msg_end == 0)
-		{
-			__builtin_disi(0x0000);
-			return 0;
-		}
 
 		/*
 		 * Save a pointer to the current buffer, save write count, switch
@@ -169,9 +165,8 @@ UCHAR i2c_logger_flush(void)
 		}
 
 		i2c_logger_msg_end = 0;
-
-		__builtin_disi(0x0000);
 	}
+	__builtin_disi(0x0000);
 
 	/*
 	 * Dump the log entry to the serial port.

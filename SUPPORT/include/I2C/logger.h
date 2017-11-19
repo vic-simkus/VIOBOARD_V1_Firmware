@@ -23,7 +23,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * \file
- * 
+ *
  * \author Vidas Simkus (vic.simkus@simkus.com)
  */
 
@@ -36,31 +36,31 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * \ingroup LOG_LEVEL
  * Logging level that identifies the message as a 'PROTOCOL' message.
  */
-#define LOGGER_LEVEL_PROTOCOL	16
+#define LOGGER_LEVEL_PROTOCOL	0x39
 
 /**
  * \ingroup LOG_LEVEL
  * Error logging level.
  */
-#define LOGGER_LEVEL_ERROR		8
+#define LOGGER_LEVEL_ERROR		0x38
 
 /**
  * \ingroup LOG_LEVEL
  * Warning logging level.
  */
-#define LOGGER_LEVEL_WARN		4
+#define LOGGER_LEVEL_WARN		0x37
 
 /**
  * \ingroup LOG_LEVEL
  * Information logging level.
  */
-#define LOGGER_LEVEL_INFO		2
+#define LOGGER_LEVEL_INFO		0x36
 
 /**
  * \ingroup LOG_LEVEL
  * Debug logging level
  */
-#define LOGGER_LEVEL_DEBUG		0
+#define LOGGER_LEVEL_DEBUG		0x30
 
 /**
  * Sets the logging level.  Any message that comes in that's less than the currently configured logging level will be discarded.

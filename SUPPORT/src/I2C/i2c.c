@@ -13,12 +13,13 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include <xc.h>
 
 #include "I2C/i2c.h"
 #include "I2C/i2c_callbacks.h"
+#include "support.h"
 
 #include  <libpic30.h>
 
@@ -37,9 +38,11 @@ const UCHAR * const  I2C_ERROR_MAP [] = {
 #endif
 
 volatile i2c_register_list i2c_registers;
-
 static volatile UCHAR last_write_error;
 static volatile UCHAR last_read_error;
+volatile I2C_COMM_STATS i2c_comm_stats;
+
+static inline UCHAR i2c_in_write_byte(UCHAR _data_out);
 
 //volatile UINT slave_isr_count;
 
@@ -47,6 +50,8 @@ void i2c_init(UCHAR _isr_priority, UCHAR _slave_address, UINT _brg)
 {
 	i2c_master_isr_fixup();
 	i2c_slave_isr_fixup();
+
+	mem_clear((void *) &i2c_comm_stats, sizeof (I2C_COMM_STATS));
 
 	I2CCONbits.STREN = 1; //	Enable clock stretching
 	I2CCONbits.A10M = 0; //	Disable 10 bit addresses
@@ -79,14 +84,14 @@ void i2c_init(UCHAR _isr_priority, UCHAR _slave_address, UINT _brg)
 	return;
 }
 
-SINT i2c_last_read_error(void)
+inline SINT i2c_last_read_error(void)
 {
 	SINT t = last_read_error;
 	last_read_error = I2C_ERR_NONE;
 	return t;
 }
 
-SINT i2c_last_write_error(void)
+inline SINT i2c_last_write_error(void)
 {
 	SINT t = last_write_error;
 	last_write_error = I2C_ERR_NONE;
@@ -148,7 +153,7 @@ void i2c_setup_default_registers(void)
 
 	i2c_registers.register_list[I2C_REG_VERSION_STR].data = (UCHAR*) "VI2C v1.0";
 	i2c_registers.register_list[I2C_REG_VERSION_STR].ro = 1;
-	i2c_registers.register_list[I2C_REG_VERSION_STR].data_length = strlen((const char *)i2c_registers.register_list[I2C_REG_VERSION_STR].data) + 1; // account for the null at the end.
+	i2c_registers.register_list[I2C_REG_VERSION_STR].data_length = strlen((const char *) i2c_registers.register_list[I2C_REG_VERSION_STR].data) + 1; // account for the null at the end.
 
 	return;
 }
@@ -207,6 +212,8 @@ UCHAR i2c_write_read(UCHAR _address, UCHAR * _write_data, UINT _write_count, UCH
 
 	read_idx = 0;
 
+	turn_on_receive_led();
+
 	while (1)
 	{
 		I2CCONbits.RCEN = 1; // Enable master receive
@@ -252,10 +259,10 @@ UCHAR i2c_write_read(UCHAR _address, UCHAR * _write_data, UINT _write_count, UCH
 
 __end_func:
 
-	i2c_bus_stop();
-
 	res.write_error = last_write_error;
 	res.read_error = last_read_error;
+
+	i2c_bus_stop();
 
 	if (_res != 0)
 	{
@@ -265,6 +272,7 @@ __end_func:
 		_res->read_error = res.read_error;
 	}
 
+	turn_off_receive_led();
 	return !(res.write_error & res.read_error);
 }
 
@@ -287,32 +295,33 @@ UCHAR i2c_write_buffer_ex(UCHAR _address, UCHAR * _data, UINT _count, i2c_result
 		 */
 		res.write_error = last_write_error;
 		res.read_error = last_read_error;
+
+		goto _end;
 	}
-	else
+
+	res.bytes_written = i2c_write_buffer(_data, _count);
+
+	if (res.bytes_written < _count)
 	{
-		res.bytes_written = i2c_write_buffer(_data, _count);
-
-		if (res.bytes_written < _count)
-		{
-			/*
-			 * Failed to send byte.
-			 */
-			res.write_error = last_write_error;
-			res.read_error = last_read_error;
-		}
+		/*
+		 * Failed to send byte.
+		 */
+		res.write_error = last_write_error;
+		res.read_error = last_read_error;
 	}
 
-	i2c_bus_stop();
+_end:
 
 	res.write_error = last_write_error;
 	res.read_error = last_read_error;
+
+	i2c_bus_stop();
 
 	if (_res != 0)
 	{
 		_res->bytes_read = res.bytes_read;
 		_res->bytes_written = res.bytes_written;
 		_res->write_error = res.write_error;
-
 		_res->read_error = res.read_error;
 	}
 
@@ -321,11 +330,13 @@ UCHAR i2c_write_buffer_ex(UCHAR _address, UCHAR * _data, UINT _count, i2c_result
 
 UINT i2c_write_buffer(UCHAR * _data, UINT _count)
 {
-	int i = 0;
+	turn_on_send_led();
+
+	size_t i = 0;
 
 	for (i = 0; i < _count; i++)
 	{
-		if (!i2c_write_byte(_data[i]))
+		if (!i2c_in_write_byte(_data[i]))
 		{
 			/*
 			 * Byte write failed.  Error is in last_write_error.
@@ -334,6 +345,7 @@ UINT i2c_write_buffer(UCHAR * _data, UINT _count)
 		}
 	}// dump bits onto the bus
 
+	turn_off_send_led();
 	return i;
 }
 
@@ -409,17 +421,20 @@ inline UCHAR i2c_bus_stop(void)
 	}
 }
 
-UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart)
+inline UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart)
 {
 	I2CSTATbits.IWCOL = 0; // clear the collision bit
 	I2CSTATbits.BCL = 0; //clear master collision bit
+	UCHAR rc = 1;
+	turn_on_send_led();
 
 	if (_restart == 1)
 	{
 		if (!i2c_bus_restart())
 		{
 			// Collision detected.
-			return 0;
+			rc = 0;
+			goto _end;
 		}
 	}
 	else
@@ -427,11 +442,12 @@ UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart)
 		if (!i2c_bus_start())
 		{
 			// Collision detected.
-			return 0;
+			rc = 0;
+			goto _end;
 		}
 	}
 
-	if (!i2c_write_byte(_addr))
+	if (!i2c_in_write_byte(_addr))
 	{
 		/*
 		 * i2c_write_byte sets its own error code.
@@ -446,59 +462,79 @@ UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart)
 			last_write_error = I2C_ERR_W_NACK_CTRL;
 		}
 
-		return 0;
+		rc = 0;
+
 	}
-	return 1;
+
+_end:
+	turn_off_send_led();
+	return rc;
 }
 
-UCHAR i2c_write_byte(UCHAR _data_out)
+static inline UCHAR i2c_in_write_byte(UCHAR _data_out)
 {
-	turn_on_send_led();
+	size_t retry_count = 0;
 
-	/*
-	 * Wait for an idle bus from the perspective of the local chip
-	 */
-	I2C_WAIT_I2CCON_L5();
-
-	/*
-	 * Clear collision flags.
-	 */
-	I2CSTATbits.IWCOL = 0;
-	I2CSTATbits.BCL = 0;
-
-	/*
-	 * Shove data into the output register.
-	 */
-	I2CTRN = _data_out;
-
-	/*
-	 * Wait for the chip to finish sending it AND process an ACK/NACK from the remote chip
-	 */
-	WAIT_FOR_TRSTAT();
-
-	/*
-	 * We either fucked out with the timing or something went goofy.  Report collision and bounce.
-	 */
-	if (I2CSTATbits.IWCOL == 1 || I2CSTATbits.BCL == 1)
+	while (1)
 	{
-		last_write_error = I2C_ERR_COLLISION;
-		turn_off_send_led();
-		return 0;
+		if(retry_count == I2C_BUS_RETRIES)
+		{
+			last_write_error = I2C_ERR_W_TIMEOUT;
+			break;
+		}
+
+		last_write_error = I2C_ERR_NONE;
+		retry_count += 1;
+
+		/*
+		 * Wait for an idle bus from the perspective of the local chip
+		 */
+		I2C_WAIT_I2CCON_L5();
+
+		/*
+		 * Clear collision flags.
+		 */
+		I2CSTATbits.IWCOL = 0;
+		I2CSTATbits.BCL = 0;
+
+		/*
+		 * Shove data into the output register.
+		 */
+		I2CTRN = _data_out;
+
+		/*
+		 * Wait for the chip to finish sending it AND process an ACK/NACK from the remote chip
+		 */
+		WAIT_FOR_TRSTAT();
+
+		/*
+		 * We either fucked out with the timing or something went goofy.  Report collision and bounce.
+		 */
+		if (I2CSTATbits.IWCOL == 1 || I2CSTATbits.BCL == 1)
+		{
+			last_write_error = I2C_ERR_COLLISION;
+			i2c_comm_stats.collisions += 1;
+			continue;
+		}
+
+		/*
+		 * Slave failed to acknowledge the receipt of the byte.  Its receive buffer must have overflowed.
+		 * Slave ACK.  1 == NACK
+		 */
+		if (I2CSTATbits.ACKSTAT == 1)
+		{
+			last_write_error = I2C_ERR_W_NACK_DATA;
+			i2c_comm_stats.write_errors += 1;
+			continue;
+		}
+
+		/*
+		 * Since none of the error conditions above continued the loop we must have written the byte out successfully
+		 */
+		break;
 	}
 
-	/*
-	 * Slave failed to acknowledge the receipt of the byte.  Its receive buffer must have overflowed.
-	 * Slave ACK.  1 == NACK
-	 */
-	if (I2CSTATbits.ACKSTAT == 1)
-	{
-		last_write_error = I2C_ERR_W_NACK_DATA;
-		turn_off_send_led();
-		return 0;
-	}
-
-	turn_off_send_led();
-	return 1;	// 1 byte written out.  Clever, eh
+	return (last_write_error == I2C_ERR_NONE);
 }
 
 /*

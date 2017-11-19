@@ -13,12 +13,13 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 
 #define __SERIAL_COMM_H_INT
 #include "serial_comm.h"
 #include "serial_comm_config.h"
+#include "support.h"
 
 #include <xc.h>
 #include <stdlib.h>
@@ -27,57 +28,36 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define SER_UTXI_1	0b00
 #define SER_UTXI_4	0b11
 
-static volatile UCHAR input_buffer_1[SER_IBS];
-static volatile UCHAR input_buffer_2[SER_IBS];
-static volatile UCHAR * input_buffer_ptr;
+volatile UCHAR input_buffer_1[SER_IBS];
+volatile UCHAR input_buffer_2[SER_IBS];
+volatile UCHAR * input_buffer_ptr;
 
 volatile UCHAR output_buffer[SER_IBS];
+volatile UCHAR * output_buffer_ptr = output_buffer;	// For the assembler stuff.  Because I couldn't figure out how to get the fire register address of a variable.
 
 volatile UINT ib_idx;
 volatile UINT ob_idx;
 
 UINT timeout_clicks;
 
-volatile UINT last_read_error;
 volatile UINT last_write_error;
 
-static UINT write_char(UCHAR _c, UCHAR _do_buffer);
+inline static UINT write_char(UCHAR _c, UCHAR _do_buffer);
 
-void __attribute__((interrupt, no_auto_psv))_U1RXInterrupt(void)
-{
-	if (ib_idx == SER_IBS)
-	{
-		/*
-			Do nothing more if the input buffer is full.
-			The user needs to get the data already received before more is accepted.
-		 */
-		IFS0bits.U1RXIF = 0;
-		last_read_error = SER_ERR_R_OVERFLOW;
-		goto _end;
-	}
+/*
+ * Instrumentation for keeping track of our errors.
+ */
+ser_prot_errors serial_protocol_errors;
 
-	while (U1STAbits.URXDA)
-	{
-		input_buffer_ptr[ib_idx] = U1RXREG;
-		ib_idx = ib_idx + 1;
-
-		if (ib_idx == SER_IBS)
-		{
-			last_read_error = SER_ERR_R_OVERFLOW;
-			goto _end;
-		}
-	}
-
-_end:
-	IFS0bits.U1RXIF = 0;
-	return;
-}
+extern void ser_linker_fix(void);
 
 void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks)
 {
 	timeout_clicks = _timeout_clicks;
-	last_read_error = SER_ERR_NONE;
-	last_write_error = SER_ERR_NONE;
+	//last_read_error = SER_ERR_NONE;
+	//last_write_error = SER_ERR_NONE;
+
+	mem_clear(&serial_protocol_errors,sizeof(ser_prot_errors));
 
 	input_buffer_ptr = input_buffer_1;
 
@@ -100,18 +80,24 @@ void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks
 	U1STAbits.UTXEN = 1;				// Enable transmission
 
 	IFS0bits.U1RXIF = 0;				//	Clear pending interrupt flag
-	IPC2bits.U1RXIP = _isr_priority;	//	Set receive interrupt priority
-	IEC0bits.U1RXIE = 1;				//	Enable receive interrupts
+	IFS4bits.U1ERIF = 0;
 
+	IPC2bits.U1RXIP = _isr_priority;	//	Set receive interrupt priority
+	IPC16bits.U1ERIP = _isr_priority;
+
+	IEC0bits.U1RXIE = 1;				//	Enable receive interrupts
+	IEC4bits.U1ERIE = 1;				//	Enable UART1 error interrupts
+
+	ser_linker_fix();
 	return;
 }
 
-UINT ser_write_char(const UCHAR _c)
+inline UINT ser_write_char(const UCHAR _c)
 {
 	return write_char(_c, 1);
 }
 
-UINT ser_write_16bit(const UINT _i)
+inline UINT ser_write_16bit(const UINT _i)
 {
 	UCHAR written = write_char((UCHAR) (_i >> 8), 1);
 	written += write_char((UCHAR) (_i), 1);
@@ -122,7 +108,8 @@ UINT ser_write_string(const UCHAR * _data)
 {
 	while (*_data != 0)
 	{
-		if (write_char(*_data, 1) != 1)
+		UCHAR c = *_data;
+		if (write_char(c, 1) != 1)
 		{
 			//error
 			return 0;
@@ -156,7 +143,7 @@ UINT ser_write_data(const UCHAR * _data, UINT _len)
 	return 1;
 }
 
-UCHAR ser_new_data(void)
+inline UCHAR ser_new_data(void)
 {
 	return (ib_idx > 0);
 }
@@ -194,20 +181,6 @@ UINT ser_get_data(UCHAR ** _dest)
 	return buffer_idx;
 }
 
-UINT ser_last_write_error(void)
-{
-	UINT t = last_write_error;
-	last_write_error = SER_ERR_NONE;
-	return t;
-}
-
-UINT ser_last_read_error(void)
-{
-	UINT t = last_read_error;
-	last_read_error = SER_ERR_NONE;
-	return t;
-}
-
 int  __attribute__(( __section__(".libc"))) write(int handle, void *_buffer, unsigned int count)
 {
 	int i;
@@ -218,37 +191,8 @@ int  __attribute__(( __section__(".libc"))) write(int handle, void *_buffer, uns
 	return i;
 }
 
-UINT ser_flush_buffer(void)
-{
-	UINT tx_c = 0;
-	UINT toc = 0;
 
-	last_write_error = 0;
-
-	while (tx_c < ob_idx)
-	{
-		if (U1STAbits.TRMT == 1)
-		{
-			U1TXREG = output_buffer[tx_c];
-			tx_c = tx_c + 1;
-			toc = 0;
-		}
-
-		toc = toc + 1;
-
-		if (toc == timeout_clicks)
-		{
-			last_write_error = SER_ERR_W_TIMEOUT;
-			return tx_c;
-		}
-	}
-
-	ob_idx = 0;
-
-	return tx_c;
-}
-
-static UINT write_char(UCHAR _c, UCHAR _do_buffer)
+static inline UINT write_char(UCHAR _c, UCHAR _do_buffer)
 {
 	if (ob_idx == SER_OBS)
 	{

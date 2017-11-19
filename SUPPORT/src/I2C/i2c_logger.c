@@ -38,40 +38,18 @@ void logger_set_level(UCHAR _level)
 }
 inline void logger_log(const UCHAR * _data,UCHAR _level)
 {
-	UCHAR level;
-
 	if(_level < logger_level)
 	{
 		return;
 	}
 
-	switch(_level)
-	{
-		case LOGGER_LEVEL_PROTOCOL:
-			level = 'P';
-			break;
-		case LOGGER_LEVEL_ERROR:
-			level = 'E';
-			break;
-		case LOGGER_LEVEL_WARN:
-			level = 'W';
-			break;
-		case LOGGER_LEVEL_INFO:
-			level = 'I';
-			break;
-		case LOGGER_LEVEL_DEBUG:
-			level = 'D';
-			break;
-		default:
-			level = '*';
-			break;
-	}
 
-	ser_write_string((UCHAR *)"LOG|");
-	ser_write_char(level);
+	ser_write_string((UCHAR *)"L|");
+	ser_write_char(_level);
 	ser_write_char('|');
 	ser_write_string(_data);
 	ser_write_char('\n');
+	ser_flush_buffer();
 
 	return;
 }
