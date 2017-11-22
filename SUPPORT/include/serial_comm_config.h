@@ -16,10 +16,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 /**
- \file
+ \file Various defines.  We share this file with the assembler so things must be kept simple here.
 
  \author Vidas Simkus (vic.simkus@simkus.com)
-
  */
 
 #ifndef SER_IBS
@@ -39,11 +38,12 @@ Output buffer size.
 /**
  * Various error conditions that the library may encounter.
  * We use defines because we reference these values in assembler code and it doesn't understand enums
+ * \defgroup SER_ERR Serial system errors
  */
 
-#define	SER_ERR_NONE		0		/// No error
-#define SER_ERR_R_OVERFLOW	1		/// Overflow on read.  The read buffer is full.
-#define SER_ERR_W_TIMEOUT	2		/// Time out on write.
+#define	SER_ERR_NONE		0		/// No error \ingroup SER_ERR
+#define SER_ERR_R_OVERFLOW	1		/// Overflow on read.  The read buffer is full.  \ingroup SER_ERR
+#define SER_ERR_W_TIMEOUT	2		/// Time out on write.  \ingroup SER_ERR
 
 #endif
 

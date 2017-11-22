@@ -608,6 +608,16 @@
         </C30Global>
       </item>
       <item path="src/serial_comm_asm.S" ex="true" overriding="false">
+        <C30>
+        </C30>
+        <C30-AR>
+        </C30-AR>
+        <C30-AS>
+        </C30-AS>
+        <C30-LD>
+        </C30-LD>
+        <C30Global>
+        </C30Global>
       </item>
     </conf>
     <conf name="PIC24FV32KA302" type="3">

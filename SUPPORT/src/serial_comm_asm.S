@@ -16,6 +16,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
 
+    .title "Serial routines for the PIC24"
     .include "p24FV32KA302.inc"
     #include "serial_comm_config.h"
     .text
@@ -45,33 +46,37 @@ __MathError:
     RESET
     retfie
 */
+
+/*
+Resets the UART overflow flag and updates a counter that keeps track of such overflows.
+*/
     .global __U1ErrInterrupt
 __U1ErrInterrupt:
-    BCLR U1STA,#OERR
-    BCLR IFS4, #U1ERIF
-    INC _scs_overflow_count
+    BCLR U1STA,#OERR		; Clear the overflow flag
+    BCLR IFS4, #U1ERIF		; Clear the error interrupt flag
+    INC _scs_overflow_count	; Increment the instrumentation counter
     retfie
 
-;
-; Dumps the contents of global _output_buffer into the serial stream
-; Resets _ob_idx on success.
-; Returns:
-;   W0 - Number of bytes written
 
+/*
+Dumps the contents of global _output_buffer into the serial stream
+Returns value of _ob_idx (number of bytes written).  Sets _last_write_error on failure.
+Returns:
+    W0 - Number of bytes written
+Parameters:
+    None
+*/
     .global _ser_flush_buffer
 _ser_flush_buffer:
     CLR W1			; W1 is our tx_c (transmit count)
     CLR W2			; W2 is our time out counter
-    CLR _last_write_error	; Clear the last write error.  We don't set it, but
-
+    CLR _last_write_error	; Clear the last write error.
     MOV _output_buffer_ptr,W3   ; Move the address of output buffer to W3
 
-
 1:  ; Top of the loop
-
     MOV W1,W0			; Setup for comparison
     CP _ob_idx			; Compare _ob_idx with current counter
-    BRA LE, 3f			; Brance if _ob_idx is less than or equal to loop counter
+    BRA LE, 3f			; Branche if _ob_idx is less than or equal to loop counter
 				; Else fall through and write stuff to port
 
     BTSS U1STA,#TRMT		; Test to see if the UART is ready to receive us.
@@ -84,8 +89,7 @@ _ser_flush_buffer:
     ADD #1,W1			; Increment the transmit count
     CLR _timeout_clicks		; Since we successfully wrote something to somewehere clear the timeout counter
 
-    BRA 1b
-
+    BRA 1b			; Loop
 
 2:  ; Serial stream is not ready to receive
     ADD #1, W2			; Increment the timeout counter
@@ -99,59 +103,73 @@ _ser_flush_buffer:
     MOV W0,_last_write_error	; Set error to timeout
 
 3:  ; Exit of the loop
-
-    CLR _ob_idx;		; Clear output buffer index
+    CLR _ob_idx;		; Reset output buffer index
     RETURN
 
+/*
+UART receive interrupt service routine
+*/
     .global __U1RXInterrupt
 __U1RXInterrupt:
-
-    PUSH W0
-    PUSH W1
+    PUSH W0			; Save the two registers we modify
+    PUSH W1			;
 
 2:
-    MOV #SER_IBS,W0	    ; Compare current input buffer index with it's allocated size
-    CP _ib_idx		    ; If >= has been allocated size bounce to end of routine
-    BRA GE,1f		    ; else read in data
+    MOV #SER_IBS,W0		; Compare current input buffer index with it's allocated size
+    CP _ib_idx			; If >= has been allocated size bounce to end of routine
+    BRA GE,3f			; else read in data
 
-    MOV _ib_idx,W1
-    MOV _input_buffer_ptr,W0
-    ADD W0,W1,W0
+    MOV _ib_idx,W1		; Setup the buffer pointer to be incremented
+    MOV _input_buffer_ptr,W0	;
+    ADD W0,W1,W0		; Increment the buffer pointer
+				;
+				; XXX - Can we get rid of the pointer increment here by incrementing the pointer on write below...
+				; This would save us two cycles per byte read
 
-    MOV U1RXREG,W1
-    MOV.B W1,[W0]
+    MOV U1RXREG,W1		; Read the serial port byte into a register
+    MOV.B W1,[W0]		; Move register contents into address in W0
 
-    INC _ib_idx		    ; Increment buffer index
+    INC _ib_idx			; Increment buffer index
 
-    BTSC U1STA,#URXDA
-    BRA 2b
+    BTSC U1STA,#URXDA		; Test to see if there are more bytes that can be read from the serial port
+    BRA 2b			; If there are, read them in
 
 1:
-    MOV _scs_buff_watermark,W0
-    MOV _ib_idx,W1
+    MOV _scs_buff_watermark,W0	; Setup for watermark compare
+    MOV _ib_idx,W1		;
+    CPSGT W0,W1			; Compare...
+    MOV W1,_scs_buff_watermark	; If the current buffer index is greater than the previous watermark, update the watermark instrumentation
+				; If the current buffer is not greater than the previous watermark, fall through
 
-    CPSGT W0,W1
-    MOV W1,_scs_buff_watermark
+3:
+    BCLR IFS0,#U1RXIF		; Clear the UART ISR flag
 
-    BCLR IFS0,#U1RXIF
+    POP W1			; Restore the modified registers
+    POP W0			;
 
-    POP W1
-    POP W0
-
-    retfie
+    RETFIE			; Return from service routine
 
 
+/*
+A linker fixup.  The linker will not see and use the ISRs if nothing else from the object file is referenced.
+*/
     .global _ser_linker_fix
 _ser_linker_fix:
-    nop
-    return
+    NOP
+    RETURN
 
+/*
+Serial communications status - overflow count.  Incremented whenever the error ISR resets the OERR flag on the UART
+*/
     .bss
     .global _scs_overflow_count
 _scs_overflow_count:
     .space 2
     .align 2
 
+/*
+Serial communication status - buffer watermark.  The highest buffer offset that is generated.  Used to size the input buffer and just because we're curious.
+*/
     .bss
     .global _scs_buff_watermark
 _scs_buff_watermark:

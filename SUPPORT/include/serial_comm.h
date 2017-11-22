@@ -109,25 +109,36 @@ extern UINT ser_get_data(UCHAR ** _dest);
 extern UINT ser_write_data(const UCHAR * _data, UINT _size);
 
 /**
-Gets and resets the last write error.
+ * \see serial_comm_asm.S
  */
-extern UINT ser_last_write_error(void);
-
-/**
-Gets and resets the last read error.
- */
-extern UINT ser_last_read_error(void);
-
 extern volatile UINT scs_overflow_count;
 
-typedef struct
-{
+/**
+ * Statistics we keep around for the communication portions of the board.
+ * \XXX This is misnamed.  Nothing directly to do with the serial stuff.
+ */
+typedef struct {
+	/**
+	 * Number of times an invalid call index was encountered.
+	 */
 	UINT bin_cmd_no_index;
+	/**
+	 * Number of times a call index was out of range.
+	 */
 	UINT bin_cmd_range;
+	/**
+	 * Number of times that a binary callback failed.
+	 */
 	UINT bin_cmd_cb_fail;
+	/**
+	 * Number of times the command processor buffer overflowed.
+	 */
 	UINT cmd_proc_overflow;
 } ser_prot_errors;
 
+/**
+ * Communication system statistics instance.
+ */
 extern ser_prot_errors serial_protocol_errors;
 
 #endif

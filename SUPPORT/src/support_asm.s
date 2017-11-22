@@ -105,3 +105,4 @@ _mem_clear:
     POP W0	    ; Return the same address we were passed.  Why?  Because
     RETURN
 
+/* EOF */

@@ -83,6 +83,9 @@ extern void * mem_copy_w(const void * _ptr_source, void * _ptr_dest, UINT _size)
 
 extern void ftoa (char *buf, double fval, int cField, int cPlaces);
 
+/**
+ * Start address of the EEPROM data
+ */
 #define EEPROM_START_ADDR  0xFC00
 
 /**

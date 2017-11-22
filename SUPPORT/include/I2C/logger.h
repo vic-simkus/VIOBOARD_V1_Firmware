@@ -29,7 +29,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * \defgroup LOG_LEVEL Logging level
- * Defines for the various logging levels
+ * Defines for the various logging levels.  The values are ASCII character codes for the decimal 0 ... 9.
+ * The logging level value is outputted to the user.
  */
 
 /**

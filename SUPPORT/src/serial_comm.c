@@ -54,8 +54,7 @@ extern void ser_linker_fix(void);
 void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks)
 {
 	timeout_clicks = _timeout_clicks;
-	//last_read_error = SER_ERR_NONE;
-	//last_write_error = SER_ERR_NONE;
+	last_write_error = SER_ERR_NONE;
 
 	mem_clear(&serial_protocol_errors,sizeof(ser_prot_errors));
 
