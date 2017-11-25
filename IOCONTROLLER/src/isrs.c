@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include <xc.h>
 
 #include "globals.h"
+#include "ioconfig.h"
 
 void __attribute__((interrupt, no_auto_psv))  	_ADCInterrupt(void)
 {
@@ -70,6 +71,18 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
 	 * Flip the blinky light
 	 */
 	HEARTBEAT_LED ^= 1;
+
+	confirm_clicks_passed += 1;
+
+	if(confirm_clicks_passed >= CONFIRM_CLICKS)
+	{
+		D01 = 0;
+		D02 = 0;
+		D03 = 0;
+		D04 = 0;
+
+		confirm_clicks_passed = 0;
+	}
 
 	/*
 	 * Clear the T1 interrupt flag.

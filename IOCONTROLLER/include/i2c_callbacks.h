@@ -42,6 +42,8 @@ void i2c_cb_set_do_status(UCHAR _byte, UINT _idx);
 void i2c_cb_set_pmic_status(UCHAR _byte, UINT _idx);
 UCHAR i2c_cb_get_pmic_status(UINT _idx);
 
+void i2c_cb_set_output_confirm(UCHAR _byte, UINT _idx);
+
 
 
 #endif	/* I2C_CALLBACKS_H */

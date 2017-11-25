@@ -29,5 +29,7 @@ void init_globals(void)
 		AD_BUFFER[i] = 0;
 	}
 
+	confirm_clicks_passed = 0;
+
 	return;
 }

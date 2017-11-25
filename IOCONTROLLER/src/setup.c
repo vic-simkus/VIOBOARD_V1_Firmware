@@ -110,104 +110,81 @@ void setup_i2c_custom_registers(void)
 	 * Setup get analog input status callback
 	 * Register: 0x07
 	 */
-//	i2c_registers.register_list[i2c_registers.count] = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 1;
 	i2c_registers.register_list[i2c_registers.count].cb_write = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_read = i2c_cb_get_ai_status;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup get digital output status callback
 	 * Register: 0x08
 	 */
-
-//	i2c_registers.register_list[i2c_registers.count] = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 1;
 	i2c_registers.register_list[i2c_registers.count].cb_write = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_read = i2c_cb_get_do_status;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup set digital output status callback
 	 * Register: 0x09
 	 */
-
-//	i2c_registers.register_list[i2c_registers.count] = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_write = i2c_cb_set_do_status;
 	i2c_registers.register_list[i2c_registers.count].cb_read = 0;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup PMIC output status callback
 	 * Register: 0x0A
 	 */
-
-//	i2c_registers.register_list[i2c_registers.count]  = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 1;
 	i2c_registers.register_list[i2c_registers.count].cb_read = i2c_cb_get_pmic_status;
 	i2c_registers.register_list[i2c_registers.count].cb_write = 0;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup PMIC configuration callback
 	 * Register: 0x0B
 	 */
-
-//	i2c_registers.register_list[i2c_registers.count]  = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_read = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_write = i2c_cb_set_pmic_status;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup L1 calibration getter callback
 	 * Register: 0x0C
 	 */
-
-//	i2c_registers.register_list[i2c_registers.count]  = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 1;
 	i2c_registers.register_list[i2c_registers.count].cb_read = i2c_cb_get_l1_cal;
 	i2c_registers.register_list[i2c_registers.count].cb_write = 0;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup L2 calibration getter callback
 	 * Register: 0x0D
 	 */
-//	i2c_registers.register_list[i2c_registers.count]  = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 1;
 	i2c_registers.register_list[i2c_registers.count].cb_read = i2c_cb_get_l2_cal;
 	i2c_registers.register_list[i2c_registers.count].cb_write = 0;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup L1 calibration setter callback
 	 * Register: 0x0E
 	 */
-//	i2c_registers.register_list[i2c_registers.count]  = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_read = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_write = i2c_cb_set_l1_cal;
-
 	i2c_registers.count += 1;
 
 	/*
 	 * Setup L2 calibration setter callback
 	 * Register: 0x0F
 	 */
-//	i2c_registers.register_list[i2c_registers.count]  = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_read = 0;
 	i2c_registers.register_list[i2c_registers.count].cb_write = i2c_cb_set_l2_cal;
-
 	i2c_registers.count += 1;
 
 
@@ -215,12 +192,18 @@ void setup_i2c_custom_registers(void)
 	 * Setup boot counter getter callback
 	 * Register: 0x10
 	 */
-
-//	i2c_registers.register_list[i2c_registers.count]  = i2c_init_register();
 	i2c_registers.register_list[i2c_registers.count].ro = 1;
 	i2c_registers.register_list[i2c_registers.count].cb_read = i2c_cb_get_boot_count;
 	i2c_registers.register_list[i2c_registers.count].cb_write = 0;
+	i2c_registers.count += 1;
 
+	/*
+	 * Setup boot counter getter callback
+	 * Register: 0x11
+	 */
+	i2c_registers.register_list[i2c_registers.count].ro = 0;
+	i2c_registers.register_list[i2c_registers.count].cb_read = 0;
+	i2c_registers.register_list[i2c_registers.count].cb_write = i2c_cb_set_output_confirm;
 	i2c_registers.count += 1;
 
 	return;

@@ -26,31 +26,31 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #ifndef CONFIG_H
 #define	CONFIG_H
 
-#define I2C_FO
+#define I2C_FO		// I2C Fancy Output
 
 #ifdef __dsPIC30F4011
-#define FCY 10000000UL
 #define BUS_OUT_LED LATFbits.LATF0
 #define BUS_IN_LED LATFbits.LATF1
 #define AUX_LED LATFbits.LATF4
 #define HEARTBEAT_LED LATEbits.LATE0
 #else
 
-
 #define BUS_OUT_LED LATDbits.LATD2
 #define BUS_IN_LED LATDbits.LATD9
 #define AUX_LED LATCbits.LATC14
 #define HEARTBEAT_LED LATDbits.LATD8
 
+#endif
+
 /*
- * Define interrupt priorities.  Lower value means higher priority
+ * Define interrupt priorities.
  */
 #define IP_T1	2		// Watchdog and status LED timer.
 #define	IP_I2C	5		// I2C
-#define IP_ADC	6		// ADC: The ADC ISR priority must be higher than the
-						//	I2C priority because we spin and wait for the ADC
-						//	interrupt flag to clear in the AD value read service routine
-#endif
+#define IP_ADC	6		// ADC
+
+#define CONFIRM_CLICKS 20
+
 
 #endif	/* CONFIG_H */
 

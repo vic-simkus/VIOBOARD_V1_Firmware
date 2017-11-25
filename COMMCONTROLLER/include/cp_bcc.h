@@ -96,6 +96,7 @@ UCHAR bcc_set_l2_cal_val(void);
  */
 UCHAR bcc_get_boot_count(void);
 
+UCHAR bcc_confirm_output_state(void);
 
 #endif	/* CP_BCC_H */
 

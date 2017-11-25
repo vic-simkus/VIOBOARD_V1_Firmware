@@ -63,17 +63,19 @@ void init_command_processor(void)
 
 	mem_clear(&bin_context, sizeof (binary_message_context));
 
-	binary_command_callbacks[0] = bcc_reset;
-	binary_command_callbacks[1] = bcc_get_ai_status;
-	binary_command_callbacks[2] = bcc_get_do_status;
-	binary_command_callbacks[3] = bcc_set_do_status;
-	binary_command_callbacks[4] = bcc_get_pmic_status;
-	binary_command_callbacks[5] = bcc_set_pmic_status;
-	binary_command_callbacks[6] = bcc_get_l1_cal_val;
-	binary_command_callbacks[7] = bcc_get_l2_cal_val;
-	binary_command_callbacks[8] = bcc_set_l1_cal_val;
-	binary_command_callbacks[9] = bcc_set_l2_cal_val;
-	binary_command_callbacks[10] = bcc_get_boot_count;
+	binary_command_callbacks[0x0] = bcc_reset;
+	binary_command_callbacks[0x1] = bcc_get_ai_status;
+	binary_command_callbacks[0x2] = bcc_get_do_status;
+	binary_command_callbacks[0x3] = bcc_set_do_status;
+	binary_command_callbacks[0x4] = bcc_get_pmic_status;
+	binary_command_callbacks[0x5] = bcc_set_pmic_status;
+	binary_command_callbacks[0x6] = bcc_get_l1_cal_val;
+	binary_command_callbacks[0x7] = bcc_get_l2_cal_val;
+	binary_command_callbacks[0x8] = bcc_set_l1_cal_val;
+	binary_command_callbacks[0x9] = bcc_set_l2_cal_val;
+	binary_command_callbacks[0xA] = bcc_get_boot_count;
+	binary_command_callbacks[0xB] = bcc_confirm_output_state; // XXX - this will be the get board stats stuff
+	binary_command_callbacks[0xC] = bcc_confirm_output_state;
 
 	return;
 

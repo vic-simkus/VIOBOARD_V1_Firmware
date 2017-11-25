@@ -96,7 +96,7 @@ extern binary_message_context bin_context;
 /**
  * Number of implemented binary messages.  Used to size the callback pointer array.
  */
-#define BINARY_COMMAND_COUNT 0x0B
+#define BINARY_COMMAND_COUNT 0x0D
 
 #endif	/* COMMAND_PROCESSOR_H */
 

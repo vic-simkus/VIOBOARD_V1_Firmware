@@ -146,6 +146,15 @@ _end:
 	return rc;
 }
 
+UCHAR bcc_confirm_output_state(void)
+{
+	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
+	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
+	
+	return confirm_output_state();
+}
+
 UCHAR bcc_get_l1_cal_val(void)
 {
 	return bcc_get_cal_values(IOC_I2C_REG_GET_L1_CAL);

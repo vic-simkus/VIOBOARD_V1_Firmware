@@ -55,6 +55,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define IOC_I2C_REG_SET_L1_CAL 0x0E
 #define IOC_I2C_REG_SET_L2_CAL 0x0F
 #define IOC_I2C_REG_GET_BOOT_COUNT 0x10
+#define IOC_I2C_REG_CONFIRM_OUTPUT 0x11
 
 /**
  * ADC characteristics
@@ -119,6 +120,8 @@ UINT get_boot_count(void);
 UCHAR set_cal_values(UCHAR _cmd);
 UCHAR set_l1_cal_values(void);
 UCHAR set_l2_cal_values(void);
+
+UCHAR confirm_output_state(void);
 
 
 

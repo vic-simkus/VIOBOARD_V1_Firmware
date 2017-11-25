@@ -100,6 +100,12 @@ typedef struct _eeprom_data_struct {
 	UINT pad[13];
 } eeprom_data_struct;
 
+/**
+ * Number of timer clicks since the last digital output status confirmation message.
+ */
+
+volatile GI_EXT UINT confirm_clicks_passed;
+
 GI_EXT eeprom_data_struct __attribute__((aligned)) eeprom_data;
 GI_EXT eeprom_data_struct __attribute__((aligned)) working_eeprom_data;
 

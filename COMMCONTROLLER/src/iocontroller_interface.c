@@ -230,6 +230,24 @@ __end_func:
 	return ret;
 }
 
+UCHAR confirm_output_state(void)
+{
+	UCHAR ret = 1;
+
+	mem_clear((UCHAR *) & work_buffer, WORK_BUFFER_SIZE);
+	work_buffer[0] = IOC_I2C_REG_CONFIRM_OUTPUT;
+	work_buffer[1] = 0xFF;
+
+	const i2c_result * i2c_res = sn_write(I2C_ADDR_IO_CTRL, work_buffer, 2);
+
+	if (i2c_res->read_error != I2C_ERR_NONE || i2c_res->write_error != I2C_ERR_NONE)
+	{
+		ret = 0;
+	}
+
+	return ret;
+}
+
 static UINT make_int(UCHAR _msb, UCHAR _lsb)
 {
 	UINT ret = _msb;

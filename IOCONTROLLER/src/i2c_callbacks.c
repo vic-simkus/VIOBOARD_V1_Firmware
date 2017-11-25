@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "config.h"
 #include "I2C/i2c.h"
@@ -332,3 +332,8 @@ UCHAR i2c_cb_get_pmic_status(UINT _idx)
 	return ret;
 }
 
+void i2c_cb_set_output_confirm(UCHAR _byte, UINT _idx)
+{
+	confirm_clicks_passed = 0;
+	return;
+}
