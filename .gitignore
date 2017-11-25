@@ -2,6 +2,7 @@
 /SUPPORT/nbproject/dist/PIC24FV32KA302/
 /SUPPORT/nbproject/nbproject/private/
 /COMMCONTROLLER/nbproject/private/
+/IOCONTROLLER/nbproject/private/
 /SUPPORT/nbproject/private/
 /COMMCONTROLLER/dist/PIC24F32KA302/
 /SUPPORT/build/dsPIC30F4013/
@@ -13,3 +14,5 @@
 /COMMCONTROLLER/dist/PIC24FV32KA302/
 /SUPPORT/build/PIC24FV32KA302/
 /SUPPORT/dist/PIC24FV32KA302/
+Makefile-*
+Package-*
