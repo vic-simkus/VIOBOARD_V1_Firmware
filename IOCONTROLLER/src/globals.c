@@ -13,15 +13,15 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #define __GLOBALS_H_INT
 #include "globals.h"
 
-eeprom_data_struct eeprom_data;
-eeprom_data_struct working_eeprom_data;
+//eeprom_data_struct eeprom_data;
+//eeprom_data_struct working_eeprom_data;
 
-const UINT EEPROM_DATA_OFFSETS[EEPROM_SIZE_LINES/2] = {
+const UINT EEPROM_DATA_OFFSETS[EEPROM_SIZE_LINES / 2] = {
 	EEPROM_START_ADDR + (0x40 * 0x00),
 	EEPROM_START_ADDR + (0x40 * 0x01),
 	EEPROM_START_ADDR + (0x40 * 0x02),
@@ -40,15 +40,33 @@ const UINT EEPROM_DATA_OFFSETS[EEPROM_SIZE_LINES/2] = {
 	EEPROM_START_ADDR + (0x40 * 0x0F)
 };
 
-void init_globals(void)
+void globals_init(void)
 {
-	UINT i=0;
-	for(i=0;i<AD_INPUT_NUM;i++)
+
+	UINT i = 0;
+	for (i = 0; i < AD_INPUT_NUM; i++)
 	{
 		AD_BUFFER[i] = 0;
+		AD_CAL_OFFSET_BUFFER[i] = 0;
 	}
 
 	confirm_clicks_passed = 0;
 
 	return;
+}
+
+void globals_recalc_cal_values(void)
+{
+	UINT i = 0;
+	SINT calval = 0;
+	for (i = 0; i < AD_INPUT_NUM; i++)
+	{
+		calval = (SINT) ( (working_eeprom_data.l1_cal_data_arr[i] & 0xFF00) >> 8);
+		calval -= (SINT) ( working_eeprom_data.l1_cal_data_arr[i] & 0x00FF);
+
+		calval += (SINT) ( (working_eeprom_data.l2_cal_data_arr[i] & 0xFF00) >> 8);
+		calval -= (SINT) ( working_eeprom_data.l2_cal_data_arr[i] & 0x00FF);
+
+		AD_CAL_OFFSET_BUFFER[i] = calval;
+	}
 }

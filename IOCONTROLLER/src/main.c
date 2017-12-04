@@ -69,7 +69,7 @@ int main(void)
 
 	isr_linker_fixup();
 
-	init_globals();
+	globals_init();
 
 	setup_status_led_pins();
 	setup_T1();

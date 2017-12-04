@@ -122,6 +122,7 @@ void eeprom_writeout_data(void)
 	 * sizeof gives size in bytes.  We care about size in words.
 	 */
 	mem_copy_w((void *) &eeprom_data, (void *) &working_eeprom_data, sizeof (eeprom_data_struct) / 2);
+	globals_recalc_cal_values();
 
 	return;
 }

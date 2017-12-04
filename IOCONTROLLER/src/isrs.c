@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include <xc.h>
 
@@ -22,7 +22,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 void __attribute__((interrupt, no_auto_psv))  	_ADCInterrupt(void)
 {
-
 	/*
 	 * AD_BUFFER[x] is the analog input on the terminal strip.
 	 */
@@ -38,26 +37,15 @@ void __attribute__((interrupt, no_auto_psv))  	_ADCInterrupt(void)
 	TRISBbits.TRISB10 = 1;	//ICD2 -- T6 -- ADBUF7
 	 */
 
-	AD_BUFFER[0] = ADCBUF5;
-	AD_BUFFER[1] = ADCBUF4;
-	AD_BUFFER[2] = ADCBUF3;
-	AD_BUFFER[3] = ADCBUF2;
-	AD_BUFFER[4] = ADCBUF6;
-	AD_BUFFER[5] = ADCBUF7;
-	AD_BUFFER[6] = ADCBUF0;
-	AD_BUFFER[7] = ADCBUF1;
+	AD_BUFFER[0] = ADCBUF5 + AD_CAL_OFFSET_BUFFER[0];
+	AD_BUFFER[1] = ADCBUF4 + AD_CAL_OFFSET_BUFFER[1];
+	AD_BUFFER[2] = ADCBUF3 + AD_CAL_OFFSET_BUFFER[2];
+	AD_BUFFER[3] = ADCBUF2 + AD_CAL_OFFSET_BUFFER[3];
+	AD_BUFFER[4] = ADCBUF6 + AD_CAL_OFFSET_BUFFER[4];
+	AD_BUFFER[5] = ADCBUF7 + AD_CAL_OFFSET_BUFFER[5];
+	AD_BUFFER[6] = ADCBUF0 + AD_CAL_OFFSET_BUFFER[6];
+	AD_BUFFER[7] = ADCBUF1 + AD_CAL_OFFSET_BUFFER[7];
 
-
-	UCHAR i = 0;
-	for (i = 0; i < AD_INPUT_NUM; i++)
-	{
-		AD_BUFFER[i] = AD_BUFFER[i] + ( (working_eeprom_data.l1_cal_data_arr[i] & 0xFF00) >> 8);
-
-		AD_BUFFER[i] = AD_BUFFER[i] - ( working_eeprom_data.l1_cal_data_arr[i] & 0x00FF);
-
-		AD_BUFFER[i] = AD_BUFFER[i] + ( (working_eeprom_data.l2_cal_data_arr[i] & 0xFF00) >> 8);
-		AD_BUFFER[i] = AD_BUFFER[i] - ( working_eeprom_data.l2_cal_data_arr[i] & 0x00FF);
-	}
 
 	IFS0bits.ADIF = 0;
 
@@ -75,7 +63,7 @@ void __attribute__((interrupt, no_auto_psv)) _T1Interrupt(void)
 
 	confirm_clicks_passed += 1;
 
-	if(confirm_clicks_passed >= CONFIRM_CLICKS)
+	if (confirm_clicks_passed >= CONFIRM_CLICKS)
 	{
 		D01 = 0;
 		D02 = 0;

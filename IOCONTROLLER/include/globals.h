@@ -34,12 +34,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define GI_EXT
 #endif
 
-/**
- * Buffer containing the analog input values.  Populated by the ADC ISR.
- */
-GI_EXT volatile UINT AD_BUFFER[AD_INPUT_NUM];
 
-GI_EXT void init_globals(void);
+GI_EXT void globals_init(void);
+GI_EXT void globals_recalc_cal_values(void);
 
 /**
  * AI calibration values.
@@ -66,18 +63,20 @@ typedef struct _eeprom_data_struct {
 	/**
 	 * Has the struct been initialized.  An initialized struct has a value of 0xDEAD in this field.
 	 */
-	UINT eeprom_init;	// 1
+	UINT eeprom_init;
 
 	/**
 	 * How many times has the IOCONTROLLER booted since the struct been initialized.
 	 */
-	UINT boot_count;	// 2
+	UINT boot_count;
 
 	/**
 	 * Serial number of the associated instance.  Used for wear-leveling.
 	 * \note Be careful about moving this member within the struct.  It is addressed by offset.
 	 */
 	UINT serial;
+
+	UINT is_dirty;
 
 	/**
 	 * The array is for fast indexing into the calibration data by the ISR.
@@ -86,7 +85,7 @@ typedef struct _eeprom_data_struct {
 	 */
 	union {
 		cal_data_struct l1_cal_data;
-		UINT l1_cal_data_arr[AD_INPUT_NUM]; // 8 (3-10)
+		UINT l1_cal_data_arr[AD_INPUT_NUM];
 	};
 
 	/**
@@ -95,10 +94,8 @@ typedef struct _eeprom_data_struct {
 	 */
 	union {
 		cal_data_struct l2_cal_data;
-		UINT l2_cal_data_arr[AD_INPUT_NUM]; // 8 (11-18)
+		UINT l2_cal_data_arr[AD_INPUT_NUM];
 	};
-
-	UINT is_dirty;	//19
 
 	/**
 	 * Pad buffer.
@@ -107,10 +104,21 @@ typedef struct _eeprom_data_struct {
 	UINT pad[12];
 } eeprom_data_struct;
 
+
+/**
+ * Buffer containing the analog input values.  Populated by the ADC ISR.
+ */
+GI_EXT volatile UINT AD_BUFFER[AD_INPUT_NUM];
+
+/**
+ * Precalculated calibration offsets for the analog inputs.
+ * We re-calculate on every calibration data write to EEPROM because that means that the data was changed.
+ */
+GI_EXT volatile SINT AD_CAL_OFFSET_BUFFER[AD_INPUT_NUM];
+
 /**
  * Number of timer clicks since the last digital output status confirmation message.
  */
-
 volatile GI_EXT UINT confirm_clicks_passed;
 
 /*
@@ -120,7 +128,6 @@ volatile GI_EXT UINT confirm_clicks_passed;
  */
 GI_EXT eeprom_data_struct __attribute__((aligned,address(0xF7E))) eeprom_data;
 GI_EXT eeprom_data_struct __attribute__((aligned,address(0xFBE))) working_eeprom_data;
-
 
 #define EEPROM_DATA_STRUCT_COUNT EEPROM_SIZE_LINES/2
 
