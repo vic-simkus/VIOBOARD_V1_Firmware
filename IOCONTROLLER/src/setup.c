@@ -230,8 +230,8 @@ void setup_i2c(void)
 	i2c_setup_default_registers();
 	setup_i2c_custom_registers();
 
-	i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 90);
-	//2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 0x00F);
+	//i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 90);
+	i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 0x00F);
 
 	sn_init(1000, 10);
 

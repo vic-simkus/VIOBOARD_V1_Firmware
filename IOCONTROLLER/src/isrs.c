@@ -26,6 +26,7 @@ void __attribute__((interrupt, no_auto_psv))  	_ADCInterrupt(void)
 	 * AD_BUFFER[x] is the analog input on the terminal strip.
 	 */
 
+
 	/*
 	TRISBbits.TRISB1 = 1;	//ICD3 -- T7 -- ADBUF0
 	TRISBbits.TRISB2 = 1;	//ICD4 -- T8 -- ADBUF1
