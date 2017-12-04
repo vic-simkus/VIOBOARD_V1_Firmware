@@ -17,6 +17,7 @@
         <itemPath>include/serial_comm_config.h</itemPath>
         <itemPath>include/serial_comm.h</itemPath>
         <itemPath>include/support.h</itemPath>
+        <itemPath>include/eeprom_config.h</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
@@ -40,8 +41,8 @@
         <itemPath>src/support.c</itemPath>
         <itemPath>src/calibration.c</itemPath>
         <itemPath>src/support_asm.s</itemPath>
-        <itemPath>src/eeprom_utils.s</itemPath>
         <itemPath>src/serial_comm_asm.S</itemPath>
+        <itemPath>src/eeprom_utils.S</itemPath>
       </logicalFolder>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"

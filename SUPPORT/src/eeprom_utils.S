@@ -23,6 +23,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     .include "p24FV32KA302.inc"
 .endif
 
+    #include "eeprom_config.h"
+
     .title  "EEPROM management routines"
 
     .text
@@ -33,20 +35,31 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
     .global _eeprom_write_word
     .global _eeprom_write_line
     .global _eeprom_read_line
+    .global _eeprom_read_word
 
-    .equiv NVMKEY_A, 0x55
-    .equiv NVMKEY_B, 0xAA
+/**
+Disables the interrupts for a certain number of instructions, performs the EEPROM
+ulock dance, and initiates the write.
+*/
+.macro __unlock_eeprom_reg
+    DISI #5
+    MOV #NVMKEY_A, W0
+    MOV W0, NVMKEY	; Push out first key
+    MOV #NVMKEY_B, W0
+    MOV W0, NVMKEY	; Push out second key
+    BSET NVMCON,#WR	; Set the WR bit of NVMCON
+.endm
 
-    .equiv NVMCON_EE_ERASE_WORD,    0x4044  ; NVMCON register value to erase one EEPROM word (16 bits)
-    .equiv NVMCON_EE_ERASE_LINE,    0x4045  ; NVMCON register value to erase one EEPROM line (16 words, 256 bits)
-    .equiv NVMCON_EE_ERASE_ALL,	    0x4046  ; NVMCON register value to erase whole EEPROM
-    .equiv NVMCON_EE_PROG_WORD,	    0x4004  ; NVMCON register value to write one EEPROM word (16 bits)
-    .equiv NVMCON_EE_PROG_LINE,	    0x4005  ; NVMCON register value to write one EEPROM line (16 words, 256 bits)
-    .equiv EEPROM_ADD_MSB,	    0x007F  ; Most significant byte of a 24 bit address of the EEPROM address range
-					    ; The lower 16 bits will be the pointer to the actual memory
-    .equiv IPL_DIS_INT,	    0x00E0  ; 0b1110 used to set the SR.IPL to 111 thus disabling interrupts
+/**
+Waits for the last EEPROM operation to finish.
+*/
+.macro __wait_for_eeprom
+1:
+    BTSC NVMCON, #WR	; Test to see if erase is complete (bit test skip if clear)
+    GOTO 1b		; Not clear, go back to the previous line
+.endm
 
-/*
+/**
 Erases the whole EEPROM.
 Interrupts are disabled until the erase finishes.
 Parameters:
@@ -55,30 +68,19 @@ Returns:
     Nothing
 */
 _eeprom_erase_all:
+    __wait_for_eeprom
 
     MOV #NVMCON_EE_ERASE_ALL,W0
     MOV W0,NVMCON
 
-    PUSH SR		; Save SR
-    MOV #IPL_DIS_INT,W0	; Move 0b1110 0000 into W0
-    IOR SR		; OR SR with W0 placing result in SR setting SR.IPL to 111 and effectively disabling the interrupts
+    __unlock_eeprom_reg
 
-    MOV #NVMKEY_A, W0
-    MOV W0, NVMKEY	; Push out first key
-    MOV #NVMKEY_B, W0
-    MOV W0, NVMKEY	; Push out second key
-    BSET NVMCON,#WR	; Set the WR bit of NVMCON
     NOP			; Do we need these two NOPs or is that only for erasing flash?
     NOP
-    POP SR		; Restore SR
-
-1:
-    BTSC NVMCON, #WR	; Test to see if erase is complete (bit test skip if clear)
-    GOTO 1b		; Not clear, go back to the previous line
 
     RETURN
 
-/*
+/**
 Erases a word in the EEPROM.
 All addressing is taken care of.  The caller does not need to make any special considerations with exception of passing a properly aligned address.
 Interrupts are disabled until the erase finishes.
@@ -88,6 +90,8 @@ Return:
     Nothing
 */
 _eeprom_erase_word:
+    __wait_for_eeprom
+
     MOV	W0, NVMADR	    ; Setup the lower 16 bits of the EEPROM address to be erased
     MOV	#EEPROM_ADD_MSB,W0  ; Setup the upper 8 bits of the EEPROM address to be erased
     MOV	W0, NVMADRU	    ;
@@ -95,25 +99,11 @@ _eeprom_erase_word:
     MOV #NVMCON_EE_ERASE_WORD,W0    ; Set the erase word command
     MOV W0,NVMCON
 
-    PUSH SR		    ; Dsiable interrupts
-    MOV #IPL_DIS_INT,W0
-    IOR SR
-
-    MOV #NVMKEY_A, W0
-    MOV W0, NVMKEY	; Push out first key
-    MOV #NVMKEY_B, W0
-    MOV W0, NVMKEY	; Push out second key
-    BSET NVMCON,#WR	; Set the WR bit of NVMCON
-
-    POP SR
-
-1:
-    BTSC NVMCON, #WR	; Test to see if erase is complete (bit test skip if clear)
-    GOTO 1b		; Not clear, go back to the previous line
+    __unlock_eeprom_reg
 
     RETURN
 
-/*
+/**
 Erases a line in the EEPROM.  A line is 16 words (32 bytes).
 All addressing is taken care of.  The caller does not need to make any special considerations with exception of passing a properly aligned address.
 Interrupts are disabled until the erase finishes.
@@ -123,34 +113,23 @@ Parameters:
 Return:
     Nothing
 */
+
 _eeprom_erase_line:
+    __wait_for_eeprom
+
     MOV	W0, NVMADR	    ; Setup the lower 16 bits of the EEPROM address to be erased
-    MOV	#EEPROM_ADD_MSB,W0  ; Setup the upper 8 bits of the EEPROM address to be erased
+    MOV	#EEPROM_ADD_MSB,W0  ; Setup the upper 8 bits ofNVMCON the EEPROM address to be erased
     MOV	W0, NVMADRU	    ;
 
     MOV #NVMCON_EE_ERASE_LINE,W0    ; Set the erase word command
     MOV W0,NVMCON
 
-    PUSH SR		    ; Dsiable interrupts
-    MOV #IPL_DIS_INT,W0
-    IOR SR
-
-    MOV #NVMKEY_A, W0
-    MOV W0, NVMKEY	; Push out first key
-    MOV #NVMKEY_B, W0
-    MOV W0, NVMKEY	; Push out second key
-    BSET NVMCON,#WR	; Set the WR bit of NVMCON
-
-    POP SR
-
-1:
-    BTSC NVMCON, #WR	; Test to see if erase is complete (bit test skip if clear)
-    GOTO 1b		; Not clear, go back to the previous line
+    __unlock_eeprom_reg
 
     RETURN
 
-/*
-Writes a word into the EEPROM.  Does erase the word before writing.
+/**
+Writes a word into the EEPROM.  Does not erase the word before writing.
 Interrupts are disabled until the write finishes.
 Parameters:
     W0 - A word-aligned pointer into the EEPROM address space to be overwritten.  Meaning that first word is 0x7FFC00, next word is 0x7FFC02, and so forth in that manner
@@ -159,9 +138,9 @@ Return:
     Nothing.
 */
 _eeprom_write_word:
-    PUSH W0		    ; Save W0 because we're about to molest it
+    __wait_for_eeprom
 
-    RCALL _eeprom_erase_word
+    PUSH W0		    ; Save W0 because we're about to molest it
 
     MOV #EEPROM_ADD_MSB,W0  ; Move the EEPROM address MSB into TBLPAG
     MOV W0, TBLPAG	    ;
@@ -172,26 +151,12 @@ _eeprom_write_word:
     POP W0		    ; Restore W0 which contains the EEPROM target address
     TBLWTL W1,[W0]	    ; Write into the EEPROM address (holding latch)
 
-    PUSH SR		    ; Disable interrupts
-    MOV #IPL_DIS_INT,W0
-    IOR SR
-
-    MOV #NVMKEY_A, W0
-    MOV W0, NVMKEY	; Push out first key
-    MOV #NVMKEY_B, W0
-    MOV W0, NVMKEY	; Push out second key
-    BSET NVMCON,#WR	; Set the WR bit of NVMCON
-
-    POP SR
-
-1:
-    BTSC NVMCON, #WR	; Test to see if erase is complete (bit test skip if clear)
-    GOTO 1b		; Not clear, go back to the previous line
+   __unlock_eeprom_reg
 
     RETURN
 
-/*
-Writes a line into the EEPROM.  Does erase the line before writing.
+/**
+Writes a line into the EEPROM.  Does not erase the line before writing.
 Interrupts are disabled until the write finishes.
 Parameters:
     W0 - A line-aligned pointer into the EEPROM address space to be written to.  First line is at 0x7FFC00, second line is at 0x7FFC20, and so forth.
@@ -200,9 +165,9 @@ Return:
     Nothing
 */
 _eeprom_write_line:
-    PUSH W0
+    __wait_for_eeprom
 
-    RCALL _eeprom_erase_line
+    PUSH W0		    ; Save W0 because we're about to molest it
 
     MOV #EEPROM_ADD_MSB,W0  ; Move the EEPROM address MSB into TBLPAG
     MOV W0, TBLPAG	    ;
@@ -210,30 +175,23 @@ _eeprom_write_line:
     MOV #NVMCON_EE_PROG_LINE, W0
     MOV W0, NVMCON
 
-    POP W0
-
+    POP W0		    ; Restore W0 which contains the EEPROM target address
     REPEAT #15
-    TBLWTL [W1++],[W0++]
+    TBLWTL [W1++],[W0++]	    ; Write into the EEPROM address (holding latch)
 
-    PUSH SR		    ; Disable interrupts
-    MOV #IPL_DIS_INT,W0
-    IOR SR
-
-    MOV #NVMKEY_A, W0
-    MOV W0, NVMKEY	; Push out first key
-    MOV #NVMKEY_B, W0
-    MOV W0, NVMKEY	; Push out second key
-    BSET NVMCON,#WR	; Set the WR bit of NVMCON
-
-    POP SR
-
-1:
-    BTSC NVMCON, #WR	; Test to see if erase is complete (bit test skip if clear)
-    GOTO 1b		; Not clear, go back to the previous line
+    __unlock_eeprom_reg
 
     RETURN
 
+/**
+Reads a line from the EEPROM.
+Parameters:
+    W0 - A line aligned pointer into the EEPROM address space.  First line is at 0x7FFC00, second line is at 0x7FFC20 and so forth.
+    W1 - A pointer to the destination of the write.  It should be aligned on a word boundry.  No PSV stuff is done by this function.
+*/
 _eeprom_read_line:
+    __wait_for_eeprom
+
     PUSH W0
 
     MOV #EEPROM_ADD_MSB,W0  ; Move the EEPROM address MSB into TBLPAG
@@ -243,6 +201,25 @@ _eeprom_read_line:
 
     REPEAT #15
     TBLRDL [W0++],[W1++]
+
+    RETURN
+
+/**
+Reads a word from the EEPROM.
+Parameters:
+    W0 - A word aligned pointer into the EEPROM data space.
+Return
+    The read word in W0
+*/
+_eeprom_read_word:
+    __wait_for_eeprom
+
+    PUSH W0
+    MOV #EEPROM_ADD_MSB,W0
+    MOV W0, TBLPAG
+    POP W0
+
+    TBLRDL [W0],W0
 
     RETURN
 

@@ -129,4 +129,11 @@ extern void eeprom_write_line(void * _target_addr, void * _source_addr);
  */
 extern void eeprom_read_line(void * _source_addr, void * _target_addr);
 
+/**
+ * Reads a word value from the EEPROM and returns it to the caller.
+ * \param _source_addr Word aligned EEPROM data address.
+ * \return Value of the word
+ */
+extern UINT eeprom_read_word(void * _source_addr);
+
 #endif

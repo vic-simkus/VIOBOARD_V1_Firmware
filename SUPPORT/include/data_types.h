@@ -25,6 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define __DATA_TYPES_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 #define UCHAR	unsigned char
 #define SCHAR	char
@@ -34,5 +35,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #define ULONG	uint32_t
 #define SLONG	int32_t
+
 
 #endif
