@@ -47,7 +47,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 #define IP_T1	2		// Watchdog and status LED timer.
 #define	IP_I2C	5		// I2C
-#define IP_ADC	6		// ADC
+#define IP_ADC	4		// ADC
 
 #define CONFIRM_CLICKS 20
 

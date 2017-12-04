@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "eeprom_utils.h"
 #include "support.h"
@@ -21,8 +21,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 void eeprom_initialize_data(void)
 {
+	NVMCONbits.WRERR = 0;
+
 	eeprom_data.eeprom_init = 0xDEAD;
 	eeprom_data.boot_count = 1;
+	eeprom_data.serial = 0;
 	eeprom_data.is_dirty = 0;
 
 	UINT i = 0;
@@ -30,7 +33,7 @@ void eeprom_initialize_data(void)
 	for (i = 0; i < AD_INPUT_NUM; i++)
 	{
 		eeprom_data.l1_cal_data_arr[i] = (i << 8);
-		eeprom_data.l2_cal_data_arr[i] = ((i*2) << 8);
+		eeprom_data.l2_cal_data_arr[i] = ((i * 2) << 8);
 	}
 
 	eeprom_data.pad[0] = 0x100;
@@ -44,10 +47,53 @@ void eeprom_initialize_data(void)
 	eeprom_data.pad[8] = 0x108;
 	eeprom_data.pad[9] = 0x109;
 	eeprom_data.pad[10] = 0x10A;
-	eeprom_data.pad[11] = 0x10B;
-	eeprom_data.pad[12] = 0x10C;
+	eeprom_data.pad[11] = 0xBEEF;
 
 	eeprom_writeout_data();
+}
+
+ULONG eeprom_get_max_serial_ex(void)
+{
+	size_t i;
+	UINT sv = 0, max_sv = 0, offset = 0;
+
+	for (i = 0; i < EEPROM_DATA_STRUCT_COUNT; i++)
+	{
+		sv = eeprom_read_word((void *) EEPROM_DATA_OFFSETS[i] + EEPROM_SERIAL_OFFSET);
+
+		if (sv <= 0xFFFE && sv > max_sv)
+		{
+			max_sv = sv;
+			offset = i;
+		}
+	}
+
+	ULONG ret;
+
+	ret = offset;
+	ret = ret << 16;
+	ret |= max_sv;
+
+	return ret;
+}
+
+ULONG eeprom_get_next_serial_ex(void)
+{
+	ULONG val = eeprom_get_max_serial_ex();
+
+	UINT offset = EE_UNPACK_OFFSET(val) + 1;
+	UINT serial = EE_UNPACK_SERIAL(val) + 1;
+
+	if (offset > 0x0F)
+	{
+		offset = 0;
+	}
+
+	ULONG ret = offset;
+	ret = ret << 16;
+	ret |= serial;
+
+	return ret;
 }
 
 void eeprom_writeout_data(void)
@@ -56,16 +102,26 @@ void eeprom_writeout_data(void)
 	ipl = SRbits.IPL;
 	SRbits.IPL = 0b111;
 
-	eeprom_write_line((void *) EEPROM_START_ADDR, &eeprom_data);
-	eeprom_write_line((void *) EEPROM_START_ADDR + 0x20, ((void *) &eeprom_data) + 0x20);
+	ULONG ser_data = eeprom_get_next_serial_ex();
+	UINT offset = EE_UNPACK_OFFSET(ser_data);
+	UINT serial = EE_UNPACK_SERIAL(ser_data);
+
+	eeprom_data.serial = serial;
+
+	eeprom_erase_line((void *) EEPROM_DATA_OFFSETS[offset]);
+	eeprom_erase_line((void *) EEPROM_DATA_OFFSETS[offset] + 0x20);
+
+	eeprom_write_line((void *) EEPROM_DATA_OFFSETS[offset], ((void *) &eeprom_data));
+	eeprom_write_line((void *) EEPROM_DATA_OFFSETS[offset] + 0x20, ((void *) &eeprom_data) + 0x20);
+
 	eeprom_data.is_dirty = 0;
+
+	SRbits.IPL = ipl;
 
 	/*
 	 * sizeof gives size in bytes.  We care about size in words.
 	 */
 	mem_copy_w((void *) &eeprom_data, (void *) &working_eeprom_data, sizeof (eeprom_data_struct) / 2);
-
-	SRbits.IPL = ipl;
 
 	return;
 }
@@ -76,8 +132,11 @@ void eeprom_readin_data(void)
 	ipl = SRbits.IPL;
 	SRbits.IPL = 0b111;
 
-	eeprom_read_line((void *) EEPROM_START_ADDR, &eeprom_data);
-	eeprom_read_line((void *) EEPROM_START_ADDR + 0x20, ((void *) &eeprom_data) + 0x20);
+	ULONG serial_data = eeprom_get_max_serial_ex();
+	UINT offset = EE_UNPACK_OFFSET(serial_data);
+
+	eeprom_read_line((void *) EEPROM_DATA_OFFSETS[offset], &eeprom_data);
+	eeprom_read_line((void *) EEPROM_DATA_OFFSETS[offset] + 0x20, ((void *) &eeprom_data) + 0x20);
 	eeprom_data.is_dirty = 0;
 
 	/*

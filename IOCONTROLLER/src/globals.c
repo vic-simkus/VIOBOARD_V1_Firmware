@@ -21,6 +21,25 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 eeprom_data_struct eeprom_data;
 eeprom_data_struct working_eeprom_data;
 
+const UINT EEPROM_DATA_OFFSETS[EEPROM_SIZE_LINES/2] = {
+	EEPROM_START_ADDR + (0x40 * 0x00),
+	EEPROM_START_ADDR + (0x40 * 0x01),
+	EEPROM_START_ADDR + (0x40 * 0x02),
+	EEPROM_START_ADDR + (0x40 * 0x03),
+	EEPROM_START_ADDR + (0x40 * 0x04),
+	EEPROM_START_ADDR + (0x40 * 0x05),
+	EEPROM_START_ADDR + (0x40 * 0x06),
+	EEPROM_START_ADDR + (0x40 * 0x07),
+	EEPROM_START_ADDR + (0x40 * 0x08),
+	EEPROM_START_ADDR + (0x40 * 0x09),
+	EEPROM_START_ADDR + (0x40 * 0x0A),
+	EEPROM_START_ADDR + (0x40 * 0x0B),
+	EEPROM_START_ADDR + (0x40 * 0x0C),
+	EEPROM_START_ADDR + (0x40 * 0x0D),
+	EEPROM_START_ADDR + (0x40 * 0x0E),
+	EEPROM_START_ADDR + (0x40 * 0x0F)
+};
+
 void init_globals(void)
 {
 	UINT i=0;

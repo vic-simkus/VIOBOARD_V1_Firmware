@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "setup.h"
 #include "config.h"
@@ -25,7 +25,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include <xc.h>
 #include <libpic30.h>
-
 
 void setup_adc(void)
 {
@@ -90,7 +89,6 @@ void setup_adc(void)
 	IFS0bits.ADIF = 0;		// clear flag
 	IPC2bits.ADIP = IP_ADC;	// interrupt priority.
 	IEC0bits.ADIE = 1;		// enable ADC interrupts.
-
 
 	return;
 
@@ -232,8 +230,8 @@ void setup_i2c(void)
 	i2c_setup_default_registers();
 	setup_i2c_custom_registers();
 
-	//i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 90);
-	i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 0x00F);
+	i2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 90);
+	//2c_init(IP_I2C, I2C_ADDR_IO_CTRL, 0x00F);
 
 	sn_init(1000, 10);
 

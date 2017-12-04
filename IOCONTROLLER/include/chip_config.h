@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef CHIP_CONFIG_H
 #define	CHIP_CONFIG_H
@@ -72,13 +72,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #pragma config ICS = ICS_PGD            // Comm Channel Select (Use PGC/EMUC and PGD/EMUD)
 
 #endif
-
-
-
-// #pragma config statements should precede project file includes.
-// Use project enums instead of #define for ON and OFF.
-
-
 
 #endif	/* CHIP_CONFIG_H */
 

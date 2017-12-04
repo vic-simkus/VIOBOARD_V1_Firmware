@@ -110,6 +110,10 @@ void i2c_cb_set_l1_cal(UCHAR _byte, UINT _idx)
 	else
 	{
 		eeprom_data.l1_cal_data_arr[curr_cal_idx] = (eeprom_data.l1_cal_data_arr[curr_cal_idx] | (_byte << 8));
+	}
+
+	if (_idx == (AD_INPUT_NUM * 2) - 1 )
+	{
 		eeprom_data.is_dirty = 1;
 	}
 
@@ -139,6 +143,11 @@ void i2c_cb_set_l2_cal(UCHAR _byte, UINT _idx)
 	else
 	{
 		eeprom_data.l2_cal_data_arr[curr_cal_idx] = (eeprom_data.l2_cal_data_arr[curr_cal_idx] | (_byte << 8));
+		eeprom_data.is_dirty = 1;
+	}
+
+	if (_idx == (AD_INPUT_NUM * 2) - 1 )
+	{
 		eeprom_data.is_dirty = 1;
 	}
 

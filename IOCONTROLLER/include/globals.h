@@ -24,6 +24,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "support.h"
 #include "ioconfig.h"
 #include "support.h"
+#include "eeprom_config.h"
 
 #ifndef GLOBALS_H
 #define	GLOBALS_H
@@ -73,6 +74,12 @@ typedef struct _eeprom_data_struct {
 	UINT boot_count;	// 2
 
 	/**
+	 * Serial number of the associated instance.  Used for wear-leveling.
+	 * \note Be careful about moving this member within the struct.  It is addressed by offset.
+	 */
+	UINT serial;
+
+	/**
 	 * The array is for fast indexing into the calibration data by the ISR.
 	 * The individual entries are there for meat-bag consumption.
 	 * Yes I know I could index into it without the union by doing basic arithmetic, but that's the kind of hard-to read smart shit I deliberately avoid in the code.
@@ -97,7 +104,7 @@ typedef struct _eeprom_data_struct {
 	 * Pad buffer.
 	 * NOTE - make sure to decrement as fields are added
 	 */
-	UINT pad[13];
+	UINT pad[12];
 } eeprom_data_struct;
 
 /**
@@ -106,8 +113,25 @@ typedef struct _eeprom_data_struct {
 
 volatile GI_EXT UINT confirm_clicks_passed;
 
-GI_EXT eeprom_data_struct __attribute__((aligned)) eeprom_data;
-GI_EXT eeprom_data_struct __attribute__((aligned)) working_eeprom_data;
+/*
+ * We stick these at known addresses so that we don't have to go hunting for them every time we debug.
+ *
+ * We chose end of memory address space just because.
+ */
+GI_EXT eeprom_data_struct __attribute__((aligned,address(0xF7E))) eeprom_data;
+GI_EXT eeprom_data_struct __attribute__((aligned,address(0xFBE))) working_eeprom_data;
 
+
+#define EEPROM_DATA_STRUCT_COUNT EEPROM_SIZE_LINES/2
+
+/**
+ * Pre-calculated offsets into the EEPROM address space for instances of our EEPROM data.
+ */
+GI_EXT const UINT EEPROM_DATA_OFFSETS[EEPROM_DATA_STRUCT_COUNT];
+
+/**
+ * Offset of the serial member in the EEPROM_DATA struct.
+ */
+#define EEPROM_SERIAL_OFFSET 4
 #endif	/* GLOBALS_H */
 

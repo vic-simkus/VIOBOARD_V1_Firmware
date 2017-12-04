@@ -52,6 +52,7 @@ void __attribute__((interrupt, no_auto_psv))  	_ADCInterrupt(void)
 	for (i = 0; i < AD_INPUT_NUM; i++)
 	{
 		AD_BUFFER[i] = AD_BUFFER[i] + ( (working_eeprom_data.l1_cal_data_arr[i] & 0xFF00) >> 8);
+
 		AD_BUFFER[i] = AD_BUFFER[i] - ( working_eeprom_data.l1_cal_data_arr[i] & 0x00FF);
 
 		AD_BUFFER[i] = AD_BUFFER[i] + ( (working_eeprom_data.l2_cal_data_arr[i] & 0xFF00) >> 8);
