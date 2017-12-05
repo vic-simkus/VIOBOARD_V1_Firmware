@@ -79,7 +79,7 @@ _ser_flush_buffer:
     BRA LE, 3f			; Branche if _ob_idx is less than or equal to loop counter
 				; Else fall through and write stuff to port
 
-    BTSS U1STA,#TRMT		; Test to see if the UART is ready to receive us.
+    BTSC U1STA,#UTXBF		; Test to see if the UART is ready to receive us.
 				; We use the TRMT flag because UTXBF is broken according to silicon errata.
 				; Using UXBF is confirmed to break stuff
     GOTO 2f			; If it's not skip to label 2...

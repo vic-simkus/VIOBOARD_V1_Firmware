@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "support.h"
 #include <string.h>
@@ -176,9 +176,9 @@ void ftoa (char *buf, double fval, int cField, int cPlaces)
 		fval *= scale;
 
 		if (fval >= 0)
- 		 fval += 0.5f;		//  For positive round number up
- 		else
- 		 fval -= 0.5f;		// For negative round number down
+			fval += 0.5f;		//  For positive round number up
+		else
+			fval -= 0.5f;		// For negative round number down
 
 		lTemp = (long) fval;			//convert to long integer - ltemp=45678
 
@@ -189,6 +189,29 @@ void ftoa (char *buf, double fval, int cField, int cPlaces)
 
 	strncpy(buf, fbuf, (size_t) cField);		//copy the final result to the output buffer
 	buf[cField] = 0;					//Null terminate buf
+}
 
+UINT checksum( UINT const data[], UINT nWords )
+{
+	ULONG sum = 0;
+
+	/*
+	 * IP headers always contain an even number of bytes.
+	 */
+	while ( nWords-- > 0 )
+	{
+		sum += *( data++ );
+	}
+
+	/*
+	 * Use carries to compute 1's complement sum.
+	 */
+	sum = ( sum >> 16 ) + ( sum & 0xFFFF );
+	sum += sum >> 16;
+
+	/*
+	 * Return the inverted 16-bit result.
+	 */
+	return ((UINT ) ~sum );
 }
 

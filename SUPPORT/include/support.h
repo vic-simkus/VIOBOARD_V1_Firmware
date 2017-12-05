@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 /**
 \file
@@ -135,5 +135,14 @@ extern void eeprom_read_line(void * _source_addr, void * _target_addr);
  * \return Value of the word
  */
 extern UINT eeprom_read_word(void * _source_addr);
+
+/**
+ * Implements the Internet checksum.
+ * \see https://tools.ietf.org/html/rfc1071
+ * \param data Data buffer to checksum.  The last word should be all zeros and that's where the calculated checksum should be placed for transmission.
+ * \param _word_count Number of words in the _data buffer.
+ * \return  Calculated checksum.  If the data buffer already contains a checksum, a successful run will return a zero (0).
+ */
+extern UINT checksum( UINT const _data[], UINT _word_count);
 
 #endif

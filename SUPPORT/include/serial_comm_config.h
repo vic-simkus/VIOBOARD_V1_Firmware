@@ -25,7 +25,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 /**
 Input buffer size.  Since the input buffer is double buffered the actual size requirement is twice the specified amount.
  */
-#define SER_IBS 32
+#define SER_IBS 64
 #endif
 
 #ifndef SER_OBS

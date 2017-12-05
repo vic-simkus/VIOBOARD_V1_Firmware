@@ -26,6 +26,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 
 #define SER_UTXI_1	0b00
+#define SER_UTXI_34	0b10
 #define SER_UTXI_4	0b11
 
 volatile UCHAR input_buffer_1[SER_IBS];
@@ -73,7 +74,7 @@ void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks
 	// 416 - 9600 baud
 	// 13332 - 300 baud
 
-	U1STAbits.URXISEL = SER_UTXI_1;		//	Interrupt every character since the Microchip FIFOs are broken
+	U1STAbits.URXISEL = SER_UTXI_34;		//	Interrupt every character
 
 	U1MODEbits.UARTEN = 1;				// Enable UART
 	U1STAbits.UTXEN = 1;				// Enable transmission
