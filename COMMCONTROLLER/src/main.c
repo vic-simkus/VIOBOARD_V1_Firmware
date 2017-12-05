@@ -182,7 +182,7 @@ int main(void)
 
 
 	SRbits.IPL = 0;		// set CPU interrupt priority to zero (all interrupts will fire)
-	INTCON1bits.NSTDIS = 1;	// disable nested interrupts.
+	INTCON1bits.NSTDIS = 0;	// disable nested interrupts.
 
 	ANSA = 0;
 	ANSB = 0; //	Claim all pins from greedy AD module
@@ -194,7 +194,7 @@ int main(void)
 	rtcc_init();
 
 	//ser_init(34, 1, 7, 0xFFFF);
-	ser_init(207, 1, 7, 0xFFFF);
+	ser_init(207, 1, 6, 0xFFFF);
 
 	ser_write_char(0x00);
 	ser_write_char(0x00);

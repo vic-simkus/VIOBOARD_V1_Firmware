@@ -83,11 +83,17 @@ void init_command_processor(void)
 
 UCHAR process_binary_command(void)
 {
+	/*
+	 * Disable the UART so that incomming data does not mess with our buffer.
+	 */
+//	U1MODEbits.UARTEN = 0;
+
 	UCHAR rc = 1;
 	if (bin_context.expected_length < 1)
 	{
 		serial_protocol_errors.bin_cmd_no_index += 1;
 		rc = 0;
+		goto _end;
 	}
 
 	UCHAR call_index = mg_command_buffer[bin_context.start_index];
@@ -96,6 +102,7 @@ UCHAR process_binary_command(void)
 	{
 		serial_protocol_errors.bin_cmd_range += 1;
 		rc = 0;
+		goto _end;
 	}
 
 	BCC_BUFFER_ADD_BYTE(0x10);			// begin binary message
@@ -115,10 +122,28 @@ UCHAR process_binary_command(void)
 		bin_context.output_buffer_idx = 0;
 		BCC_BUFFER_ADD_BYTE(0x10);			// begin binary message
 		BCC_BUFFER_ADD_BYTE(call_index);	// the command this message is in response to.
-		BCC_BUFFER_ADD_BYTE(0x00);			// Failure
+		BCC_BUFFER_ADD_WORD(0x00);			// Failure
 		BCC_BUFFER_ADD_WORD(0x01);
 		BCC_BUFFER_ADD_BYTE(0xFF);
 	}
+
+	if((bin_context.output_buffer_idx % 2)	!= 0)
+	{
+		/*
+		 * Pad to even length
+		 */
+		BCC_BUFFER_ADD_BYTE(0x00);
+		bin_context.output_buffer_w[2] += 1;
+	}
+
+	BCC_BUFFER_ADD_WORD(0x0);
+
+	bin_context.output_buffer_w[2] += 2;		// Third byte is the buffer length.  We change it here in order to accommodate the alignment fix and checksum
+
+	UINT chksum = checksum(bin_context.output_buffer_w,bin_context.output_buffer_idx/2);
+	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx-1))] = chksum;
+
+	_end:
 
 	ser_write_data(bin_context.output_buffer,bin_context.output_buffer_idx);
 	ser_flush_buffer();

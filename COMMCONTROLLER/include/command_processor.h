@@ -36,7 +36,10 @@ void reset_command_processor_state(void);
  */
 typedef UCHAR (*binary_command_callback)(void) ;
 
-#define BCC_OUTPUT_BUFFER_SIZE 38
+/**
+ * \note Keep this an even number.
+ */
+#define BCC_OUTPUT_BUFFER_SIZE 48
 
 /**
  * Context for the binary message processing stage.
@@ -70,7 +73,10 @@ typedef struct {
 
 	UINT output_buffer_idx;
 
-	UCHAR output_buffer[BCC_OUTPUT_BUFFER_SIZE];
+	union {
+		UCHAR output_buffer[BCC_OUTPUT_BUFFER_SIZE];
+		UINT output_buffer_w[BCC_OUTPUT_BUFFER_SIZE / 2];
+	};
 
 } binary_message_context;
 
@@ -88,10 +94,13 @@ extern binary_message_context bin_context;
 		bin_context.output_buffer_idx += 1
 
 #define BCC_BUFFER_ADD_WORD(_w) \
-		bin_context.output_buffer[bin_context.output_buffer_idx] = (_w >> 8) & 0x00FF; \
-		bin_context.output_buffer_idx += 1; \
 		bin_context.output_buffer[bin_context.output_buffer_idx] = (_w & 0x00FF); \
+		bin_context.output_buffer_idx += 1; \
+		bin_context.output_buffer[bin_context.output_buffer_idx] = (_w >> 8 ) & 0x00FF; \
 		bin_context.output_buffer_idx += 1
+
+#define BCC_MAKE_W_OFFSET(_v) \
+		((_v & 0xFFFE) / 2)
 
 /**
  * Number of implemented binary messages.  Used to size the callback pointer array.

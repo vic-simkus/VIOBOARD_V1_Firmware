@@ -29,6 +29,11 @@ extern binary_message_context bin_context;
 
 UCHAR bcc_reset(void)
 {
+	if(bin_context.count != 0x0A)
+	{
+		return 0;
+	}
+
 	sn_reset_slave(I2C_ADDR_IO_CTRL);
 	__asm__ volatile ("reset");
 
@@ -41,7 +46,7 @@ UCHAR bcc_get_ai_status(void)
 	UCHAR rc = update_analog_readings();
 	UINT i = 0;
 
-	BCC_BUFFER_ADD_BYTE(rc);
+	BCC_BUFFER_ADD_WORD(rc);
 	BCC_BUFFER_ADD_WORD((IOC_AI_COUNT * 2));
 
 	for (i = 0; i < IOC_AI_COUNT; i++)
@@ -54,8 +59,8 @@ UCHAR bcc_get_ai_status(void)
 
 UCHAR bcc_get_do_status(void)
 {
-	BCC_BUFFER_ADD_BYTE(0x01);
-	BCC_BUFFER_ADD_WORD(0x01);
+	BCC_BUFFER_ADD_WORD(0x01);	//result
+	BCC_BUFFER_ADD_WORD(0x01);	// length
 	BCC_BUFFER_ADD_BYTE(get_digital_ouputs());
 
 	return 1;								// return success
@@ -63,7 +68,7 @@ UCHAR bcc_get_do_status(void)
 
 UCHAR bcc_set_do_status(void)
 {
-	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// result code
 	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
 	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
 
@@ -74,7 +79,7 @@ UCHAR bcc_set_do_status(void)
 
 UCHAR bcc_get_pmic_status(void)
 {
-	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// result code
 	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
 	BCC_BUFFER_ADD_BYTE(get_pmic_status());		// payload
 
@@ -83,7 +88,7 @@ UCHAR bcc_get_pmic_status(void)
 
 UCHAR bcc_set_pmic_status(void)
 {
-	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// result code
 	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
 	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
 
@@ -98,11 +103,11 @@ static UCHAR bcc_get_cal_values(UCHAR _cmd)
 
 	if (!rc)
 	{
-		BCC_BUFFER_ADD_BYTE(0x00);				//result code - fail
+		BCC_BUFFER_ADD_WORD(0x00);				//result code - fail
 	}
 	else
 	{
-		BCC_BUFFER_ADD_BYTE(0x01);				//result code - success
+		BCC_BUFFER_ADD_WORD(0x01);				//result code - success
 	}
 
 	BCC_BUFFER_ADD_WORD((IOC_AI_COUNT * 2));	// Length of the payload
@@ -139,7 +144,7 @@ static UCHAR bcc_set_cal_values(UCHAR _cmd)
 
 _end:
 
-	BCC_BUFFER_ADD_BYTE(rc);					// result code
+	BCC_BUFFER_ADD_WORD(rc);					// result code
 	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
 	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
 
@@ -148,10 +153,10 @@ _end:
 
 UCHAR bcc_confirm_output_state(void)
 {
-	BCC_BUFFER_ADD_BYTE(0x01);					// result code
+	BCC_BUFFER_ADD_WORD(0x01);					// result code
 	BCC_BUFFER_ADD_WORD(0x01);					// length of payload
 	BCC_BUFFER_ADD_BYTE(0xff);					// dummy payload
-	
+
 	return confirm_output_state();
 }
 
@@ -177,7 +182,7 @@ UCHAR bcc_set_l2_cal_val(void)
 
 UCHAR bcc_get_boot_count(void)
 {
-	BCC_BUFFER_ADD_BYTE(0x01);					// result code success
+	BCC_BUFFER_ADD_WORD(0x01);					// result code success
 	BCC_BUFFER_ADD_WORD(0x02);					// length of payload - one word
 	BCC_BUFFER_ADD_WORD(get_boot_count());		// write out the boot count
 
