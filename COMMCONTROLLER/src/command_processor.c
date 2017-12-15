@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "support.h"
 
@@ -36,20 +36,12 @@ binary_message_context bin_context;
 
 void reset_command_processor_state(void)
 {
-	mem_clear(mg_command_buffer, mg_cmd_buffer_idx);
-	mem_clear(mg_separator_buffer, mg_sep_buffer_idx);
+	// mem_clear(mg_command_buffer, mg_cmd_buffer_idx);
+	// mem_clear(mg_separator_buffer, mg_sep_buffer_idx);
 
 	mg_sep_buffer_idx = 0;
 	mg_cmd_buffer_idx = 0;
 
-	reset_bin_context();
-
-	return;
-}
-
-void reset_bin_context(void)
-{
-	mem_clear(&bin_context, sizeof (binary_message_context));
 	return;
 }
 
@@ -86,67 +78,73 @@ UCHAR process_binary_command(void)
 	/*
 	 * Disable the UART so that incomming data does not mess with our buffer.
 	 */
-//	U1MODEbits.UARTEN = 0;
+	//	U1MODEbits.UARTEN = 0;
 
-	UCHAR rc = 1;
+	UINT sys_fail = 0;
+
 	if (bin_context.expected_length < 1)
 	{
 		serial_protocol_errors.bin_cmd_no_index += 1;
-		rc = 0;
+		sys_fail = 1;
 		goto _end;
 	}
 
 	UCHAR call_index = mg_command_buffer[bin_context.start_index];
 
-	if (call_index >= BINARY_COMMAND_COUNT)
+	if (call_index >= BINARY_COMMAND_COUNT || call_index < 0x01)
 	{
 		serial_protocol_errors.bin_cmd_range += 1;
-		rc = 0;
+		sys_fail = 2;
 		goto _end;
 	}
 
-	BCC_BUFFER_ADD_BYTE(0x10);			// begin binary message
-	BCC_BUFFER_ADD_BYTE(call_index);		// the command this message is in response to.
+	BCC_RESP_SET_MARKER();
+	BCC_RESP_SET_CI(call_index);
 
 	/*
-	 * The command processing function will output the rest of the data into the stream.
+	 * The command processing function will output the rest of the data into the buffer.
 	 */
 	if (binary_command_callbacks[call_index]() != 1)
 	{
 		serial_protocol_errors.bin_cmd_cb_fail += 1;
-		rc = 0;
+		BCC_RESP_SET_RES(0xFF00 & bin_context.output_buffer_w[RESP_MSG_RESP_FIELD_IDX_W]);  // Really make sure that the result code is not 0
 	}
 
-	if(!rc)
-	{
-		bin_context.output_buffer_idx = 0;
-		BCC_BUFFER_ADD_BYTE(0x10);			// begin binary message
-		BCC_BUFFER_ADD_BYTE(call_index);	// the command this message is in response to.
-		BCC_BUFFER_ADD_WORD(0x00);			// Failure
-		BCC_BUFFER_ADD_WORD(0x01);
-		BCC_BUFFER_ADD_BYTE(0xFF);
-	}
+_end:
 
-	if((bin_context.output_buffer_idx % 2)	!= 0)
+	if (sys_fail)
 	{
 		/*
-		 * Pad to even length
+		 * We end up here if the message length is goofy (<1) or if the call index is out of range.
+		 * Basically the only time either one of those would happen is if the message is garbled in transmission.
 		 */
-		BCC_BUFFER_ADD_BYTE(0x00);
-		bin_context.output_buffer_w[2] += 1;
+		BCC_RESP_CLEAR_HEADER();
+		BCC_RESP_SET_MARKER();
+		BCC_RESP_SET_CI(0xFF);
+		BCC_RESP_SET_RES(0xFF00 | sys_fail);
+		BCC_RESP_SET_PAYLOAD_LEN(0x01);
+		BCC_RESP_SET_WORD(0, 0xFFFF);
 	}
 
-	BCC_BUFFER_ADD_WORD(0x0);
 
-	bin_context.output_buffer_w[2] += 2;		// Third byte is the buffer length.  We change it here in order to accommodate the alignment fix and checksum
+	bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] += 1;
+	bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] = bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] * 2;
+	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = 0;	// Clear the checksum field otherwise we get a funny checksum
+	UINT chksum = checksum(bin_context.output_buffer_w, bin_context.output_buffer_idx / 2);
+	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = chksum;
 
-	UINT chksum = checksum(bin_context.output_buffer_w,bin_context.output_buffer_idx/2);
-	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx-1))] = chksum;
-
-	_end:
-
-	ser_write_data(bin_context.output_buffer,bin_context.output_buffer_idx);
+	ser_write_data(bin_context.output_buffer, bin_context.output_buffer_idx);
 	ser_flush_buffer();
+
+	/*
+	 * Reset the binary context state
+	 */
+	bin_context.count = 0;
+	bin_context.expected_length = 0;
+	bin_context.is_active = 0;
+	bin_context.length_msb = 0;
+	bin_context.start_index = 0;
+	bin_context.output_buffer_idx = 0;
 
 	return 1;
 }

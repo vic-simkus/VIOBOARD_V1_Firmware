@@ -65,7 +65,7 @@ void rtcc_init(void)
 
 	IFS0bits.T1IF = 0;			// Clear timer interrupt flag.
 
-	IPC0bits.T1IP = 1;			// Set the timer interrupt priority to 1
+	IPC0bits.T1IP = 6;			// Set the timer interrupt priority to 1
 
 	IEC0bits.T1IE = 1;			// Enable timer interrupts
 	T1CONbits.TON = 1;			// Enable timer

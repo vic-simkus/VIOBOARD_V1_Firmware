@@ -76,31 +76,49 @@ typedef struct {
 	union {
 		UCHAR output_buffer[BCC_OUTPUT_BUFFER_SIZE];
 		UINT output_buffer_w[BCC_OUTPUT_BUFFER_SIZE / 2];
-	};
+	} ;
 
 } binary_message_context;
 
-#define RESP_MSG_ID 0
-#define RESP_MSG_CALL_INDEX 1
-#define RESP_MSG_RES_CODE 2
-#define RESP_MSG_PLL_MSG 3
-#define RESP_MSG_PLL_LSB 4
-#define RESP_MSG_HEADER_LEN 5
-
 extern binary_message_context bin_context;
 
-#define BCC_BUFFER_ADD_BYTE(_b) \
-		bin_context.output_buffer[bin_context.output_buffer_idx] = _b; \
-		bin_context.output_buffer_idx += 1
 
-#define BCC_BUFFER_ADD_WORD(_w) \
-		bin_context.output_buffer[bin_context.output_buffer_idx] = (_w & 0x00FF); \
-		bin_context.output_buffer_idx += 1; \
-		bin_context.output_buffer[bin_context.output_buffer_idx] = (_w >> 8 ) & 0x00FF; \
-		bin_context.output_buffer_idx += 1
+#define RESP_MSG_HEADER_LEN_B 6
+#define RESP_MSG_HEADER_LEN_W 3
+#define REP_MSG_PAYLOAD_LEN_IDX_W	0x02
+
+#define RESP_MSG_SUCCESS_CODE 0x00
+#define RESP_MSG_FAIL_CODE 0x01
+
+#define RESP_MSG_MARKER_FIELD_IDX_B 0x00
+#define RESP_MSG_CI_FIELD_IDX_B 0x01
+#define RESP_MSG_RESP_FIELD_IDX_W 0x01
+
+#define BCC_RESP_SET_MARKER() \
+	bin_context.output_buffer[0x00] = 0x10			// byte 1
+
+#define BCC_RESP_SET_CI(_ci) \
+	bin_context.output_buffer[0x01] = _ci			// byte 2
+
+#define BCC_RESP_SET_RES(_res) \
+	bin_context.output_buffer_w[0x01] = _res		// bytes 3 & 4
+
+#define BCC_RESP_SET_PAYLOAD_LEN(_len) \
+	bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] = _len; \
+	bin_context.output_buffer_idx = RESP_MSG_HEADER_LEN_B + (_len * 2) + 2
+
+#define BCC_RESP_SET_WORD(_idx,_w)	\
+	bin_context.output_buffer_w[(RESP_MSG_HEADER_LEN_W ) + _idx] = _w
+
+#define BCC_RESP_CLEAR_HEADER() \
+	bin_context.output_buffer_w[0x00] = 0x00; \
+	bin_context.output_buffer_w[0x01] = 0x00; \
+	bin_context.output_buffer_w[0x02] = 0x00; \
+	bin_context.output_buffer_w[0x03] = 0x00; \
+	bin_context.output_buffer_w[0x04] = 0x00
 
 #define BCC_MAKE_W_OFFSET(_v) \
-		((_v & 0xFFFE) / 2)
+	((_v & 0xFFFE) / 2)
 
 /**
  * Number of implemented binary messages.  Used to size the callback pointer array.

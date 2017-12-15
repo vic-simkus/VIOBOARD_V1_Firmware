@@ -42,123 +42,116 @@ void main_event_loop(void)
 	mem_clear(mg_command_buffer, COMMAND_BUFFER_SIZE);
 	mem_clear(mg_separator_buffer, COMMAND_SEPARATOR_BUFFER_SIZE);
 
-	UINT read_data_s = 0;
-	UCHAR * read_data = 0;
 	UCHAR c = 0;
 	UINT idx = 0;
 
 	for (; ; )
 	{
-		if (ib_idx > 0)
+		ser_switch_input_buffers();
+
+		for (idx = 0; idx < ser_input_buffer_b_idx; idx++)
 		{
-			read_data_s = ser_get_data(&read_data);
-			for (idx = 0; idx < read_data_s; idx++)
+			c = ser_input_buffer_b[idx];
+
+			/*
+			 * Put character into buffer and advance index.
+			 * Duh.
+			 */
+
+			mg_command_buffer[mg_cmd_buffer_idx] = c;
+			mg_cmd_buffer_idx += 1;
+
+			if (bin_context.is_active == 0)
 			{
-				c = read_data[idx];
+				if (c == '@')
+				{
+					bin_context.is_active = 1;
 
-				/*
-				 * Put character into buffer and advance index.
-				 * Duh.
-				 */
-
-				mg_command_buffer[mg_cmd_buffer_idx] = c;
-				mg_cmd_buffer_idx += 1;
-
-				if (bin_context.is_active == 0)
+					/*
+					 * Once binary mode is initiated we expect the next two bytes to be
+					 * expected length in little endian format with MSB transmitted first.
+					 */
+				}
+				else if (c == '\n' || c == '\r')
 				{
 					/*
-					 * text mode
-					 */
-					if (c == '\n' || c == '\r')
-					{
-						if (mg_cmd_buffer_idx > 1)
-						{
-							mg_cmd_buffer_idx = mg_cmd_buffer_idx - 1;
-							mg_command_buffer[mg_cmd_buffer_idx] = 0;
-							process_text_command();
-							reset_command_processor_state();
-						}
-						else
-						{
-							reset_command_processor_state();
-						}
+					* text mode
+					*/
 
-					}
-					else if (c == ' ' || c == '\t')
+					if (mg_cmd_buffer_idx > 1)
 					{
-						mg_separator_buffer[mg_sep_buffer_idx] = mg_cmd_buffer_idx - 1;
-						mg_sep_buffer_idx += 1;
-					}
-					else if (c == '@')
-					{
-						bin_context.is_active = 1;
-
-						/*
-						 * Once binary mode is initiated we expect the next two bytes to be
-						 * expected length in little endian format with MSB transmitted first.
-						 */
-					}
-				} // not in binary mode.
-				else
-				{
-					/*
-					 * In binary mode
-					 */
-					if (bin_context.count == 0 && bin_context.start_index == 0)
-					{
-						/*
-						 * Length MSB
-						 */
-						bin_context.length_msb = c;
-						bin_context.count += 1;
-					}
-					else if (bin_context.count == 1 && bin_context.start_index == 0)
-					{
-						/*
-						 * Length LSB
-						 */
-						bin_context.expected_length = ((UINT) bin_context.length_msb) << 8;
-						bin_context.expected_length |= c;
-						bin_context.length_msb = 0;
-
-						bin_context.start_index = mg_cmd_buffer_idx;
-						bin_context.count = 0;
+						mg_cmd_buffer_idx = mg_cmd_buffer_idx - 1;
+						mg_command_buffer[mg_cmd_buffer_idx] = 0;
+						process_text_command();
+						reset_command_processor_state();
 					}
 					else
 					{
-						/*
-						 * At this point we have the expected binary length.
-						 */
-
-						/*
-						 * We only advance the received binary data
-						 */
-						bin_context.count += 1;
-
-						if (bin_context.count == bin_context.expected_length)
-						{
-							process_binary_command();
-
-							reset_command_processor_state();
-						}
+						reset_command_processor_state();
 					}
-				}// in  binary mode
 
-				/*
-				 * Check our sanity.
-				 * XXX - If things are weird do we want to just reboot since we're in fuck-knows what state??
-				 */
-
-				if (mg_sep_buffer_idx == COMMAND_SEPARATOR_BUFFER_SIZE || mg_cmd_buffer_idx == COMMAND_BUFFER_SIZE)
+				}
+				else if (c == ' ' || c == '\t')
 				{
-					reset_command_processor_state();
-					serial_protocol_errors.cmd_proc_overflow += 1;
-				}//Separator buffer overflow
-			}//Loop through the input buffer
-		} // New serial data available
+					mg_separator_buffer[mg_sep_buffer_idx] = mg_cmd_buffer_idx - 1;
+					mg_sep_buffer_idx += 1;
+				}
 
+			} // not in binary mode.
+			else
+			{
+				/*
+				 * In binary mode
+				 */
+				if (bin_context.count == 0 && bin_context.start_index == 0)
+				{
+					/*
+					 * Length MSB
+					 */
+					bin_context.length_msb = c;
+					bin_context.count += 1;
+				}
+				else if (bin_context.count == 1 && bin_context.start_index == 0)
+				{
+					/*
+					 * Length LSB
+					 */
+					bin_context.expected_length = ((UINT) bin_context.length_msb) << 8;
+					bin_context.expected_length |= c;
+
+					bin_context.start_index = mg_cmd_buffer_idx;
+					bin_context.count = 0;
+				}
+				else
+				{
+					/*
+					 * At this point we have the expected binary length.
+					 */
+
+					/*
+					 * We only advance the received binary data
+					 */
+					bin_context.count += 1;
+
+					if (bin_context.count == bin_context.expected_length)
+					{
+						process_binary_command();
+					}
+				}
+			}// in  binary mode
+
+			/*
+			 * Check our sanity.
+			 * XXX - If things are weird do we want to just reboot since we're in fuck-knows what state??
+			 */
+
+			if (mg_sep_buffer_idx == COMMAND_SEPARATOR_BUFFER_SIZE || mg_cmd_buffer_idx == COMMAND_BUFFER_SIZE)
+			{
+				reset_command_processor_state();
+				serial_protocol_errors.cmd_proc_overflow += 1;
+			}//Separator buffer overflow
+		}//Loop through the input buffer
 		i2c_logger_flush();
-
 	} // Main loop
 }
 
@@ -182,7 +175,7 @@ int main(void)
 
 
 	SRbits.IPL = 0;		// set CPU interrupt priority to zero (all interrupts will fire)
-	INTCON1bits.NSTDIS = 0;	// disable nested interrupts.
+	INTCON1bits.NSTDIS = 1;	// disable nested interrupts.
 
 	ANSA = 0;
 	ANSB = 0; //	Claim all pins from greedy AD module
@@ -194,7 +187,7 @@ int main(void)
 	rtcc_init();
 
 	//ser_init(34, 1, 7, 0xFFFF);
-	ser_init(207, 1, 6, 0xFFFF);
+	ser_init(207, 1,5, 0xFFFF);
 
 	ser_write_char(0x00);
 	ser_write_char(0x00);
@@ -230,9 +223,8 @@ int main(void)
 		}
 		__delay_ms(1000);
 	}
-	ser_write_char('\n');
 
-	//logger_protocol("FROM COMMCONTROLLER. COMMCONTROLLER UP. IOCONTROLLER SENSE_UP.");
+	ser_write_char('\n');
 	logger_protocol("F CC. CC UP. IC SU.");
 
 	main_event_loop();
