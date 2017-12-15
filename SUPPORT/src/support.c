@@ -191,7 +191,7 @@ void ftoa (char *buf, double fval, int cField, int cPlaces)
 	buf[cField] = 0;					//Null terminate buf
 }
 
-UINT checksum( UINT const data[], UINT nWords )
+inline UINT checksum( UINT const data[], UINT nWords )
 {
 	ULONG sum = 0;
 

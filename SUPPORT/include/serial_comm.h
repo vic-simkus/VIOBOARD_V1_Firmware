@@ -80,11 +80,11 @@ extern UINT ser_write_string_nl(const UCHAR * _data);
 	\note Consult the PIC famility reference manual for correct BRGH and BRGH combinations
  */
 extern void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks);
-
+extern void _ser_init_asm(void);
 /**
 	Return 1 if new data is available.  Otherwise 0 is returned.
  */
-inline extern UCHAR ser_new_data(void);
+//inline extern UCHAR ser_new_data(void);
 
 /**
 	Flushes the output buffer to the UART.
@@ -100,7 +100,7 @@ extern UINT ser_flush_buffer(void);
 	\return Number of bytes in the input buffer.  If there's not data 0 will be returned.
 	\note Do not modify in any way the input buffer pointer.  I.e do not free it.  Once the pointer is received copy the data out of the buffer and forget about the pointer.  Any modification to the pointer *WILL* break stuff.
  */
-extern UINT ser_get_data(UCHAR ** _dest);
+//extern UINT ser_get_data(UCHAR ** _dest);
 
 /**
 	Writes data to the UART.  The writes are buffered until end of data or as the buffer is filled up.
@@ -140,5 +140,13 @@ typedef struct {
  * Communication system statistics instance.
  */
 extern ser_prot_errors serial_protocol_errors;
+
+extern UCHAR * ser_input_buffer_a;
+extern UCHAR * ser_input_buffer_b;
+
+extern UINT ser_input_buffer_a_idx;
+extern UINT ser_input_buffer_b_idx;
+
+void ser_switch_input_buffers(void);
 
 #endif

@@ -29,21 +29,23 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define SER_UTXI_34	0b10
 #define SER_UTXI_4	0b11
 
-volatile UCHAR input_buffer_1[SER_IBS];
-volatile UCHAR input_buffer_2[SER_IBS];
-volatile UCHAR * input_buffer_ptr;
+//volatile UCHAR input_buffer_1[SER_IBS];
+//volatile UCHAR input_buffer_2[SER_IBS];
+//volatile UCHAR * input_buffer_ptr;
 
 volatile UCHAR output_buffer[SER_IBS];
-volatile UCHAR * output_buffer_ptr = output_buffer;	// For the assembler stuff.  Because I couldn't figure out how to get the fire register address of a variable.
+//volatile UCHAR * output_buffer_ptr = output_buffer;	// For the assembler stuff.  Because I couldn't figure out how to get the fire register address of a variable.
 
-volatile UINT ib_idx;
+//volatile UINT ib_idx;
 volatile UINT ob_idx;
 
 UINT timeout_clicks;
 
 volatile UINT last_write_error;
 
-inline static UINT write_char(UCHAR _c, UCHAR _do_buffer);
+inline static UINT write_char(UCHAR _c);
+
+extern void _ser_init_asm(void);
 
 /*
  * Instrumentation for keeping track of our errors.
@@ -54,14 +56,17 @@ extern void ser_linker_fix(void);
 
 void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks)
 {
+
+	_ser_init_asm();
+
 	timeout_clicks = _timeout_clicks;
 	last_write_error = SER_ERR_NONE;
 
 	mem_clear(&serial_protocol_errors,sizeof(ser_prot_errors));
 
-	input_buffer_ptr = input_buffer_1;
+	//input_buffer_ptr = input_buffer_1;
 
-	ib_idx = 0;
+	//ib_idx = 0;
 	ob_idx = 0;
 
 	U1MODEbits.RTSMD = 0;		//	Flow control
@@ -94,13 +99,13 @@ void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks
 
 inline UINT ser_write_char(const UCHAR _c)
 {
-	return write_char(_c, 1);
+	return write_char(_c);
 }
 
 inline UINT ser_write_16bit(const UINT _i)
 {
-	UCHAR written = write_char((UCHAR) (_i >> 8), 1);
-	written += write_char((UCHAR) (_i), 1);
+	UCHAR written = write_char((UCHAR) (_i >> 8));
+	written += write_char((UCHAR) (_i));
 	return (written);
 }
 
@@ -109,7 +114,7 @@ UINT ser_write_string(const UCHAR * _data)
 	while (*_data != 0)
 	{
 		UCHAR c = *_data;
-		if (write_char(c, 1) != 1)
+		if (write_char(c) != 1)
 		{
 			//error
 			return 0;
@@ -135,7 +140,7 @@ UINT ser_write_data(const UCHAR * _data, UINT _len)
 	int i;
 	for (i = 0; i < _len; i++)
 	{
-		if (write_char(_data[i], 1) != 1)
+		if (write_char(_data[i]) != 1)
 		{
 			return 0;
 		}
@@ -143,20 +148,17 @@ UINT ser_write_data(const UCHAR * _data, UINT _len)
 	return 1;
 }
 
+/*
 inline UCHAR ser_new_data(void)
 {
 	return (ib_idx > 0);
 }
-
+ */
+/*
 UINT ser_get_data(UCHAR ** _dest)
 {
 	UINT buffer_idx;
 
-	/*
-		Disable interrupts while the buffers are switched around.
-		Because we're using hardware flow control we shouldn't
-		lose any characters in the process.
-	 */
 	__builtin_disi(0x3FFF);
 
 	*_dest = (UCHAR *) input_buffer_ptr;
@@ -173,26 +175,24 @@ UINT ser_get_data(UCHAR ** _dest)
 
 	ib_idx = 0;
 
-	/*
-		Enable the interrupts
-	 */
+
 	__builtin_disi(0x0000);
 
 	return buffer_idx;
-}
+}*/
 
 int  __attribute__(( __section__(".libc"))) write(int handle, void *_buffer, unsigned int count)
 {
 	int i;
 	for (i = 0; i < count; i++)
 	{
-		write_char(*((UCHAR *) _buffer + i), 1);
+		write_char(*((UCHAR *) _buffer + i));
 	}
 	return i;
 }
 
 
-static inline UINT write_char(UCHAR _c, UCHAR _do_buffer)
+static inline UINT write_char(UCHAR _c)
 {
 	if (ob_idx == SER_OBS)
 	{
@@ -206,11 +206,6 @@ static inline UINT write_char(UCHAR _c, UCHAR _do_buffer)
 
 	output_buffer[ob_idx] = _c;
 	ob_idx = ob_idx + 1;
-
-	if (_do_buffer == 0)
-	{
-		return ser_flush_buffer();
-	}
 
 	return 1;
 }

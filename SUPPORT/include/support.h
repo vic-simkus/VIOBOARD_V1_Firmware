@@ -143,6 +143,6 @@ extern UINT eeprom_read_word(void * _source_addr);
  * \param _word_count Number of words in the _data buffer.
  * \return  Calculated checksum.  If the data buffer already contains a checksum, a successful run will return a zero (0).
  */
-extern UINT checksum( UINT const _data[], UINT _word_count);
+extern inline UINT checksum( UINT const _data[], UINT _word_count);
 
 #endif
