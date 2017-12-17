@@ -25,10 +25,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern binary_message_context bin_context;
 
-#define MG_BUFFER_OFFSET(_offset) ((_offset) % COMMAND_BUFFER_SIZE)
-
-///XXX - Need to convert all these methods to use a buffer and call into the serial routines once rather than every byte
-
 UCHAR bcc_reset(void)
 {
 	if (bin_context.count != 0x06)
@@ -90,19 +86,17 @@ UCHAR bcc_get_ai_status(void)
 UCHAR bcc_get_do_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
-	BCC_RESP_SET_PAYLOAD_LEN(0x01);	// length
+	BCC_RESP_SET_PAYLOAD_LEN(0x01);				// length
 	BCC_RESP_SET_WORD(0, get_digital_ouputs());
 
-
-	return 1;								// return success
+	return 1;	// return success
 }
 
 UCHAR bcc_set_do_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
-	BCC_RESP_SET_PAYLOAD_LEN(0x01);					// length of payload
+	BCC_RESP_SET_PAYLOAD_LEN(0x01);				// length of payload
 	BCC_RESP_SET_WORD(0, 0xff);					// dummy payload
-
 
 	set_digital_outputs(mg_command_buffer[MG_BUFFER_OFFSET(bin_context.start_index + 1)]);
 
@@ -112,22 +106,21 @@ UCHAR bcc_set_do_status(void)
 UCHAR bcc_get_pmic_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
-	BCC_RESP_SET_PAYLOAD_LEN(0x01);					// length of payload
-	BCC_RESP_SET_WORD(0, get_pmic_status());		// payload
+	BCC_RESP_SET_PAYLOAD_LEN(0x01);				// length of payload
+	BCC_RESP_SET_WORD(0, get_pmic_status());	// payload
 
-
-	return 1;								// return success
+	return 1;	// return success
 }
 
 UCHAR bcc_set_pmic_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
-	BCC_RESP_SET_PAYLOAD_LEN(0x01);					// length of payload
+	BCC_RESP_SET_PAYLOAD_LEN(0x01);				// length of payload
 	BCC_RESP_SET_WORD(0, 0xff);					// dummy payload
 
 	set_pmic_status(mg_command_buffer[MG_BUFFER_OFFSET(bin_context.start_index + 1)]);
 
-	return 1;								// return success
+	return 1;	// return success
 }
 
 static UCHAR bcc_get_cal_values(UCHAR _cmd)

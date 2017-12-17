@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef CP_BCC_H
 #define	CP_BCC_H
@@ -89,10 +89,21 @@ UCHAR bcc_set_l1_cal_val(void);
  */
 UCHAR bcc_set_l2_cal_val(void);
 
+/**
+ * Sets up the binary context to operate in stream mode.
+ * \return 1 on success, 0 otherwise.
+ */
 UCHAR bcc_start_status_stream(void);
 
+/**
+ * Sends out via serial port the board status  values.
+ * \return 1 on success, 0 otherwise.
+ */
 UCHAR bcc_get_board_status(void);
 
+/**
+ * Processes the binary stream stuffs.  Goes through all of the registered call indexes and invokes them in turn.
+ */
 void process_binary_stream(void);
 /**
  * Sends out via serial port the number of times the IO processor has rebooted.
@@ -101,6 +112,10 @@ void process_binary_stream(void);
  */
 UCHAR bcc_get_boot_count(void);
 
+/**
+ * Resets the state watchdog.  If this is not called on regular basis all of the IO controllers output turn off.
+ * \return
+ */
 UCHAR bcc_confirm_output_state(void);
 
 #endif	/* CP_BCC_H */

@@ -6,11 +6,9 @@
                    projectFiles="true">
       <logicalFolder name="include" displayName="include" projectFiles="true">
         <itemPath>include/rtcc.h</itemPath>
-        <itemPath>include/outputs.h</itemPath>
         <itemPath>include/iocontroller_interface.h</itemPath>
         <itemPath>include/cp_ic.h</itemPath>
         <itemPath>include/globals.h</itemPath>
-        <itemPath>include/cp_externs.h</itemPath>
         <itemPath>include/command_processor.h</itemPath>
         <itemPath>include/chip_config.h</itemPath>
         <itemPath>include/config.h</itemPath>
@@ -260,6 +258,7 @@
         <property key="UART 1" value="true"/>
         <property key="UART 2" value="true"/>
         <property key="debugoptions.useswbreakpoints" value="false"/>
+        <property key="firmware.download.all" value="false"/>
         <property key="hwtoolclock.frcindebug" value="false"/>
         <property key="memories.aux" value="false"/>
         <property key="memories.bootflash" value="false"/>

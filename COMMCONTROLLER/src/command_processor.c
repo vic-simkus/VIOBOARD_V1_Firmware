@@ -22,7 +22,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "I2C/logger.h"
 #include "cp_ic.h"
 #include "serial_comm.h"
-#include "cp_externs.h"
 #include "globals.h"
 #include "iocontroller_interface.h"
 #include "cp_bcc.h"
@@ -33,17 +32,6 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 static binary_command_callback binary_command_callbacks[BINARY_COMMAND_COUNT];
 binary_message_context bin_context;
-
-void reset_command_processor_state(void)
-{
-	// mem_clear(mg_command_buffer, mg_cmd_buffer_idx);
-	// mem_clear(mg_separator_buffer, mg_sep_buffer_idx);
-
-	mg_sep_buffer_idx = 0;
-	mg_cmd_buffer_idx = 0;
-
-	return;
-}
 
 void init_command_processor(void)
 {
@@ -81,7 +69,7 @@ void process_binary_stream(void)
 {
 	UINT ci;
 
-	for(ci=0x01;ci<=0x07;ci++)
+	for (ci = 0x01; ci <= 0x07; ci++)
 	{
 		bin_context.output_buffer_idx = 0;
 		BCC_RESP_CLEAR_HEADER();
@@ -98,7 +86,6 @@ void process_binary_stream(void)
 			BCC_RESP_SET_RES(0xFF00 & bin_context.output_buffer_w[RESP_MSG_RESP_FIELD_IDX_W]);  // Really make sure that the result code is not 0
 		}
 
-
 		bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] += 1;
 		bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] = bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] * 2;
 		bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = 0;	// Clear the checksum field otherwise we get a funny checksum
@@ -112,13 +99,9 @@ void process_binary_stream(void)
 
 	return;
 }
+
 UCHAR process_binary_command(void)
 {
-	/*
-	 * Disable the UART so that incomming data does not mess with our buffer.
-	 */
-	//	U1MODEbits.UARTEN = 0;
-
 	UINT sys_fail = 0;
 
 	if (bin_context.expected_length < 1)
@@ -128,7 +111,7 @@ UCHAR process_binary_command(void)
 		goto _end;
 	}
 
-	UCHAR call_index = mg_command_buffer[bin_context.start_index];
+	UCHAR call_index = mg_command_buffer[MG_BUFFER_OFFSET(bin_context.start_index)];
 
 	if (call_index >= BINARY_COMMAND_COUNT || call_index < 0x01)
 	{
@@ -170,8 +153,6 @@ _end:
 	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = 0;	// Clear the checksum field otherwise we get a funny checksum
 	UINT chksum = checksum(bin_context.output_buffer_w, bin_context.output_buffer_idx / 2);
 	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = chksum;
-
-
 
 	ser_write_data(bin_context.output_buffer, bin_context.output_buffer_idx);
 	ser_flush_buffer();

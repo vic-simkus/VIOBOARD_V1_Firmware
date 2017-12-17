@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #define __GLOBALS_H_INT
 #include "globals.h"
@@ -39,16 +39,4 @@ void init_globals(void)
 	{
 		IOC_AI_VOLT_VALUES[i] = 0;
 	}
-
-	/*
-	IOC_IO_MAP[0] = 6;
-	IOC_IO_MAP[1] = 7;
-	IOC_IO_MAP[2] = 3;
-	IOC_IO_MAP[3] = 2;
-	IOC_IO_MAP[4] = 1;
-	IOC_IO_MAP[5] = 0;
-	IOC_IO_MAP[6] = 4;
-	IOC_IO_MAP[7] = 5;
-*/
-
 }

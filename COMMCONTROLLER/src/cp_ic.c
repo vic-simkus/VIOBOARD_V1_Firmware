@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include <xc.h>
 #include <stdlib.h>
@@ -23,15 +23,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #include "serial_comm.h"
 
-
 #include "cp_ic.h"
-#include "cp_externs.h"
 #include "iocontroller_interface.h"
 #include "globals.h"
 
-
 #define PRINT_BUFFER_SIZE 10
-
 
 static UCHAR __attribute__((aligned)) print_buffer[PRINT_BUFFER_SIZE];
 

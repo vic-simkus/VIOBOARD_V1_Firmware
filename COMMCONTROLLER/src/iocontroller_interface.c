@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "iocontroller_interface.h"
 #include "globals.h"
@@ -35,11 +35,11 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 static UCHAR work_buffer[WORK_BUFFER_SIZE];
 
-static UINT make_int(UCHAR _msb, UCHAR _lsb);
+#define make_int(_msb,_lsb)	(  (((UINT)_msb) << 8) | ((UINT)_lsb) )
 
 UCHAR set_cal_values(UCHAR _cmd)
 {
-	mem_clear(work_buffer,WORK_BUFFER_SIZE);
+	mem_clear(work_buffer, WORK_BUFFER_SIZE);
 	UCHAR ret = 1;
 
 	work_buffer[0] = _cmd;
@@ -248,10 +248,3 @@ UCHAR confirm_output_state(void)
 	return ret;
 }
 
-static UINT make_int(UCHAR _msb, UCHAR _lsb)
-{
-	UINT ret = _msb;
-	ret = ret << 8;
-	ret = ret | _lsb;
-	return ret;
-}

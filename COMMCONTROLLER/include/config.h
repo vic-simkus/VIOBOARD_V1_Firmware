@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 
 #ifndef __CONFIG_H
@@ -40,7 +40,14 @@ Various configuration parameters.  This file is used by all modules
  */
 #define TERM_WIDTH	120
 
+/**
+ * Incomming command buffer size.
+ */
 #define COMMAND_BUFFER_SIZE 32
+
+/**
+ * Incomming command separator buffer size.
+ */
 #define COMMAND_SEPARATOR_BUFFER_SIZE COMMAND_BUFFER_SIZE / 4
 
 

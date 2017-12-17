@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "config.h"
 
@@ -61,7 +61,7 @@ void rtcc_init(void)
 
 	T1CONbits.TCKPS = 0b11;		//	Timer prescaler 256:1
 	PR1 = 31250;				//	Timer period of 0.5 seconds
-	//	If this is changed the WDT period must also be changed.
+								//	If this is changed the WDT period must also be changed.
 
 	IFS0bits.T1IF = 0;			// Clear timer interrupt flag.
 

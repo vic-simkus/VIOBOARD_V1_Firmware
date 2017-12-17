@@ -126,6 +126,7 @@ void main_event_loop(void)
 						mg_cmd_buffer_idx = mg_cmd_buffer_idx - 1;
 						mg_command_buffer[mg_cmd_buffer_idx] = 0;
 						process_text_command();
+
 						reset_command_processor_state();
 					}
 					else
@@ -142,22 +143,19 @@ void main_event_loop(void)
 
 			} // not in binary mode.
 
-
-			/*
-			 * Check our sanity.
-			 * XXX - If things are weird do we want to just reboot since we're in fuck-knows what state??
-			 */
-
 			if (mg_sep_buffer_idx == COMMAND_SEPARATOR_BUFFER_SIZE || mg_cmd_buffer_idx == COMMAND_BUFFER_SIZE)
 			{
+				/*
+				 * We're utilizing the command buffer in circular mode.  All indexes into it for reading are mod 32.
+				 * Resetting of the separator index will reset the text mode stuff, but text mode shouldn't be sending that much data to begin with.  Fools.
+				 */
 				reset_command_processor_state();
-			}//Separator buffer overflow
+			}//Buffer overflow
 		}//Loop through the input buffer
-
 
 		if (bin_context.is_stream_active)
 		{
-			if(loop_counter == 10000)
+			if (loop_counter == 10000)
 			{
 				process_binary_stream();
 				loop_counter = 0;
@@ -188,14 +186,13 @@ int main(void)
 
 	REFOCONbits.ROEN = 1;
 
-
-	SRbits.IPL = 0;		// set CPU interrupt priority to zero (all interrupts will fire)
-	INTCON1bits.NSTDIS = 1;	// disable nested interrupts.
+	SRbits.IPL = 0;				// set CPU interrupt priority to zero (all interrupts will fire)
+	INTCON1bits.NSTDIS = 1;		// disable nested interrupts.
 
 	ANSA = 0;
-	ANSB = 0; //	Claim all pins from greedy AD module
+	ANSB = 0;					// Claim all pins from greedy AD module
 
-	STAT_LED_TRIS = 0; //	Status LED on pin 25
+	STAT_LED_TRIS = 0;			// Status LED on pin 25
 
 	logger_init(LOGGER_LEVEL_DEBUG);
 

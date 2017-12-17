@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef GLOBALS_H
 #define	GLOBALS_H
@@ -28,22 +28,24 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define G_EXP
 #endif
 
+/**
+ * Raw values from the IO controller ADC.
+ */
+G_EXP volatile UINT IOC_AI_RAW_VALUES[IOC_AI_COUNT];
 
 /**
- * Map between terminal strip inputs and actually ADC channels on the IOCONTROLLER
- * The values returned by the IOCONTROLLER are in port order AN0, AN1...
- * This array maps those to terminal strip positions.
- *
- * IC_IO_MAP[0] = 6 means that ADC input 0 (first ADC input) maps to the 7th input on the terminal strip.
-
- * To make things even more difficult, terminal strip positions are numbered 1 through 8
- * while this map is index starting at 0.  Neato!
+ * Volt values from the IO controller ADC.
  */
-//G_EXP volatile UCHAR IOC_IO_MAP[IOC_AI_COUNT];
-G_EXP volatile UINT IOC_AI_RAW_VALUES[IOC_AI_COUNT];
 G_EXP volatile float IOC_AI_VOLT_VALUES[IOC_AI_COUNT];
+
+/**
+ * ADC calibration values temporary holding buffer.
+ */
 G_EXP volatile UINT IOC_CAL_VALUES[IOC_AI_COUNT];
 
+/**
+ * Voltage value per ADC converter step.  adc_ref_voltage/adc_bit_count.
+ */
 G_EXP float ioc_step_value;
 
 /**
@@ -52,7 +54,7 @@ G_EXP float ioc_step_value;
 G_EXP UCHAR __attribute__((aligned)) mg_command_buffer[COMMAND_BUFFER_SIZE];
 
 /**
- * Containts a list of indexes to the separator character in the command buffer
+ * Contains a list of indexes to the separator character in the command buffer
  * For example.  If the command buffer contains (minus the quotes) "1 2 3"
  * The separator buffer will contain [1,3].
  */
@@ -68,10 +70,11 @@ G_EXP UINT mg_sep_buffer_idx;
  */
 G_EXP UINT mg_cmd_buffer_idx;
 
+/**
+ * Initializes the globals.
+ */
 G_EXP void init_globals(void);
 
-G_EXP UINT mg_sep_buffer_idx;
-G_EXP UINT mg_cmd_buffer_idx;
 
 #endif	/* GLOBALS_H */
 

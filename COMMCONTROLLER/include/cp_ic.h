@@ -13,12 +13,16 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef CP_IC_H
 #define	CP_IC_H
 
 #include "support.h"
+
+/**
+ * \file Declarations of the text-mode command processing stuff.
+ */
 
 void print_help(void);
 
