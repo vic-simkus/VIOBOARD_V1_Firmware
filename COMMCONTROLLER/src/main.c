@@ -155,6 +155,9 @@ void main_event_loop(void)
 
 		if (bin_context.is_stream_active)
 		{
+			/*
+			 * XXX - Magic number.  60000 iterations is approximately four times a second.
+			 */
 			if (loop_counter == 60000)
 			{
 				process_binary_stream();
