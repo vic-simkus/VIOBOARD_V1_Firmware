@@ -18,6 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "eeprom_utils.h"
 #include "support.h"
 #include "globals.h"
+#include <stddef.h>
 
 void eeprom_initialize_data(void)
 {
