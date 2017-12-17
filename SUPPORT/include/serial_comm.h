@@ -110,6 +110,7 @@ extern UINT ser_write_data(const UCHAR * _data, UINT _size);
 
 /**
  * \see serial_comm_asm.S
+ * Number of times the incoming serial UART overflowed.
  */
 extern volatile UINT scs_overflow_count;
 
