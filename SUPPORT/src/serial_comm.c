@@ -79,7 +79,7 @@ void ser_init(UCHAR _brg, UCHAR _brgh, UCHAR _isr_priority, UINT _timeout_clicks
 	// 416 - 9600 baud
 	// 13332 - 300 baud
 
-	U1STAbits.URXISEL = SER_UTXI_34;		//	Interrupt every character
+	U1STAbits.URXISEL = SER_UTXI_1;		//	Interrupt every character
 
 	U1MODEbits.UARTEN = 1;				// Enable UART
 	U1STAbits.UTXEN = 1;				// Enable transmission
