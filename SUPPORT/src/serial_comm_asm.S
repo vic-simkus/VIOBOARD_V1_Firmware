@@ -219,11 +219,3 @@ _scs_overflow_count:
     .space 2
     .align 2
 
-/*
-Serial communication status - buffer watermark.  The highest buffer offset that is generated.  Used to size the input buffer and just because we're curious.
-*/
-    .bss
-    .global _scs_buff_watermark
-_scs_buff_watermark:
-    .space 2
-    .align 2
