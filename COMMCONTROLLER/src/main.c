@@ -155,7 +155,7 @@ void main_event_loop(void)
 
 		if (bin_context.is_stream_active)
 		{
-			if (loop_counter == 10000)
+			if (loop_counter == 60000)
 			{
 				process_binary_stream();
 				loop_counter = 0;
