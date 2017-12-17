@@ -231,5 +231,14 @@ UCHAR bcc_start_status_stream(void)
 
 UCHAR bcc_get_board_status(void)
 {
-	return 0;
+	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
+	BCC_RESP_SET_PAYLOAD_LEN(0x05);				// length of payload
+
+	BCC_RESP_SET_WORD(0,scs_overflow_count);
+	BCC_RESP_SET_WORD(1,serial_protocol_errors.bin_cmd_no_index);
+	BCC_RESP_SET_WORD(2,serial_protocol_errors.bin_cmd_range);
+	BCC_RESP_SET_WORD(3,serial_protocol_errors.bin_cmd_cb_fail);
+	BCC_RESP_SET_WORD(4,serial_protocol_errors.cmd_proc_overflow);
+
+	return 1;
 }

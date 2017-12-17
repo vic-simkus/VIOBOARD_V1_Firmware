@@ -167,7 +167,7 @@ extern binary_message_context bin_context;
 	bin_context.output_buffer_w[0x01] = _res		// bytes 3 & 4
 
 /**
- * Sets the payload length in the response output buffer.
+ * Sets the payload length, in words, in the response output buffer.
  */
 #define BCC_RESP_SET_PAYLOAD_LEN(_len) \
 	bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] = _len; \

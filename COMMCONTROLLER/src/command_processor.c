@@ -49,7 +49,7 @@ void init_command_processor(void)
 	binary_command_callbacks[0x4] = bcc_get_l1_cal_val;
 	binary_command_callbacks[0x5] = bcc_get_l2_cal_val;
 	binary_command_callbacks[0x6] = bcc_get_boot_count;
-	binary_command_callbacks[0x7] = bcc_get_board_status;	// XXX - not implemented
+	binary_command_callbacks[0x7] = bcc_get_board_status;
 
 	binary_command_callbacks[0x8] = bcc_set_do_status;
 	binary_command_callbacks[0x9] = bcc_set_pmic_status;
@@ -72,8 +72,8 @@ void process_binary_stream(void)
 	for (ci = 0x01; ci <= 0x07; ci++)
 	{
 		bin_context.output_buffer_idx = 0;
-		BCC_RESP_CLEAR_HEADER();
 
+		BCC_RESP_CLEAR_HEADER();
 		BCC_RESP_SET_MARKER();
 		BCC_RESP_SET_CI(ci);
 
