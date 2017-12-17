@@ -45,6 +45,8 @@ void main_event_loop(void)
 	UCHAR c = 0;
 	UINT idx = 0;
 
+	UINT loop_counter = 0;
+
 	for (; ; )
 	{
 		ser_switch_input_buffers();
@@ -61,44 +63,7 @@ void main_event_loop(void)
 			mg_command_buffer[mg_cmd_buffer_idx] = c;
 			mg_cmd_buffer_idx += 1;
 
-			if (bin_context.is_active == 0)
-			{
-				if (c == '@')
-				{
-					bin_context.is_active = 1;
-
-					/*
-					 * Once binary mode is initiated we expect the next two bytes to be
-					 * expected length in little endian format with MSB transmitted first.
-					 */
-				}
-				else if (c == '\n' || c == '\r')
-				{
-					/*
-					* text mode
-					*/
-
-					if (mg_cmd_buffer_idx > 1)
-					{
-						mg_cmd_buffer_idx = mg_cmd_buffer_idx - 1;
-						mg_command_buffer[mg_cmd_buffer_idx] = 0;
-						process_text_command();
-						reset_command_processor_state();
-					}
-					else
-					{
-						reset_command_processor_state();
-					}
-
-				}
-				else if (c == ' ' || c == '\t')
-				{
-					mg_separator_buffer[mg_sep_buffer_idx] = mg_cmd_buffer_idx - 1;
-					mg_sep_buffer_idx += 1;
-				}
-
-			} // not in binary mode.
-			else
+			if (bin_context.is_active == 1)
 			{
 				/*
 				 * In binary mode
@@ -139,6 +104,44 @@ void main_event_loop(void)
 					}
 				}
 			}// in  binary mode
+			else
+			{
+				if (c == '@')
+				{
+					bin_context.is_active = 1;
+
+					/*
+					 * Once binary mode is initiated we expect the next two bytes to be
+					 * expected length in little endian format with MSB transmitted first.
+					 */
+				}
+				else if (c == '\n' || c == '\r')
+				{
+					/*
+					 * text mode
+					 */
+
+					if (mg_cmd_buffer_idx > 1)
+					{
+						mg_cmd_buffer_idx = mg_cmd_buffer_idx - 1;
+						mg_command_buffer[mg_cmd_buffer_idx] = 0;
+						process_text_command();
+						reset_command_processor_state();
+					}
+					else
+					{
+						reset_command_processor_state();
+					}
+
+				}
+				else if (c == ' ' || c == '\t')
+				{
+					mg_separator_buffer[mg_sep_buffer_idx] = mg_cmd_buffer_idx - 1;
+					mg_sep_buffer_idx += 1;
+				}
+
+			} // not in binary mode.
+
 
 			/*
 			 * Check our sanity.
@@ -148,9 +151,21 @@ void main_event_loop(void)
 			if (mg_sep_buffer_idx == COMMAND_SEPARATOR_BUFFER_SIZE || mg_cmd_buffer_idx == COMMAND_BUFFER_SIZE)
 			{
 				reset_command_processor_state();
-				serial_protocol_errors.cmd_proc_overflow += 1;
 			}//Separator buffer overflow
 		}//Loop through the input buffer
+
+
+		if (bin_context.is_stream_active)
+		{
+			if(loop_counter == 10000)
+			{
+				process_binary_stream();
+				loop_counter = 0;
+			}
+
+			loop_counter += 1;
+		}
+
 		i2c_logger_flush();
 	} // Main loop
 }
@@ -187,7 +202,7 @@ int main(void)
 	rtcc_init();
 
 	//ser_init(34, 1, 7, 0xFFFF);
-	ser_init(207, 1,5, 0xFFFF);
+	ser_init(207, 1, 5, 0xFFFF);
 
 	ser_write_char(0x00);
 	ser_write_char(0x00);

@@ -25,14 +25,44 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern binary_message_context bin_context;
 
+#define MG_BUFFER_OFFSET(_offset) ((_offset) % COMMAND_BUFFER_SIZE)
+
 ///XXX - Need to convert all these methods to use a buffer and call into the serial routines once rather than every byte
 
 UCHAR bcc_reset(void)
 {
-	if(bin_context.count != 0x0A)
+	if (bin_context.count != 0x06)
 	{
 		return 0;
 	}
+
+	UINT idx = bin_context.start_index + 1;	// Skip past the call index.
+
+	if (mg_command_buffer[MG_BUFFER_OFFSET(idx + 0)] != 0xFF)
+	{
+		return 0;
+	}
+
+	if (mg_command_buffer[MG_BUFFER_OFFSET(idx + 1)] != 0xEE)
+	{
+		return 0;
+	}
+
+	if (mg_command_buffer[MG_BUFFER_OFFSET(idx + 2)] != 0xDD)
+	{
+		return 0;
+	}
+
+	if (mg_command_buffer[MG_BUFFER_OFFSET(idx + 3)] != 0xEE)
+	{
+		return 0;
+	}
+
+	if (mg_command_buffer[MG_BUFFER_OFFSET(idx + 4)] != 0xFF)
+	{
+		return 0;
+	}
+
 
 	sn_reset_slave(I2C_ADDR_IO_CTRL);
 	__asm__ volatile ("reset");
@@ -51,7 +81,7 @@ UCHAR bcc_get_ai_status(void)
 
 	for (i = 0; i < IOC_AI_COUNT; i++)
 	{
-		BCC_RESP_SET_WORD(0,(IOC_AI_RAW_VALUES[i]));
+		BCC_RESP_SET_WORD(i, (IOC_AI_RAW_VALUES[i]));
 	}
 
 	return rc;
@@ -61,7 +91,7 @@ UCHAR bcc_get_do_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
 	BCC_RESP_SET_PAYLOAD_LEN(0x01);	// length
-	BCC_RESP_SET_WORD(0,get_digital_ouputs());
+	BCC_RESP_SET_WORD(0, get_digital_ouputs());
 
 
 	return 1;								// return success
@@ -71,10 +101,10 @@ UCHAR bcc_set_do_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
 	BCC_RESP_SET_PAYLOAD_LEN(0x01);					// length of payload
-	BCC_RESP_SET_WORD(0,0xff);					// dummy payload
+	BCC_RESP_SET_WORD(0, 0xff);					// dummy payload
 
 
-	set_digital_outputs(mg_command_buffer[bin_context.start_index + 1]);
+	set_digital_outputs(mg_command_buffer[MG_BUFFER_OFFSET(bin_context.start_index + 1)]);
 
 	return 1;		// return success
 }
@@ -83,7 +113,7 @@ UCHAR bcc_get_pmic_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
 	BCC_RESP_SET_PAYLOAD_LEN(0x01);					// length of payload
-	BCC_RESP_SET_WORD(0,get_pmic_status());		// payload
+	BCC_RESP_SET_WORD(0, get_pmic_status());		// payload
 
 
 	return 1;								// return success
@@ -93,9 +123,9 @@ UCHAR bcc_set_pmic_status(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);	//result
 	BCC_RESP_SET_PAYLOAD_LEN(0x01);					// length of payload
-	BCC_RESP_SET_WORD(0,0xff);					// dummy payload
+	BCC_RESP_SET_WORD(0, 0xff);					// dummy payload
 
-	set_pmic_status(mg_command_buffer[bin_context.start_index + 1]);
+	set_pmic_status(mg_command_buffer[MG_BUFFER_OFFSET(bin_context.start_index + 1)]);
 
 	return 1;								// return success
 }
@@ -118,7 +148,7 @@ static UCHAR bcc_get_cal_values(UCHAR _cmd)
 	UCHAR i = 0;
 	for (i = 0; i < IOC_AI_COUNT; i++)
 	{
-		BCC_RESP_SET_WORD(i,IOC_CAL_VALUES[i]);
+		BCC_RESP_SET_WORD(i, IOC_CAL_VALUES[i]);
 	}
 
 	return rc;
@@ -134,13 +164,16 @@ static UCHAR bcc_set_cal_values(UCHAR _cmd)
 		goto _end;
 	}
 
-	UCHAR i = 0;
+	UCHAR i = 0, idx_a = 0, idx_b  = 0;
 
 	bin_context.start_index += 1;		// advance past the call i ndex.
 
 	for (i = 0; i < IOC_AI_COUNT; i++)
 	{
-		IOC_CAL_VALUES[i] = (mg_command_buffer[bin_context.start_index + (i * 2)] << 8 | mg_command_buffer[bin_context.start_index + (i * 2) + 1]);
+		idx_a = MG_BUFFER_OFFSET(bin_context.start_index + (i * 2));
+		idx_b = MG_BUFFER_OFFSET(bin_context.start_index + (i * 2) + 1);
+
+		IOC_CAL_VALUES[i] = (mg_command_buffer[idx_a] << 8 | mg_command_buffer[idx_b]);
 	}
 
 	rc = set_cal_values(_cmd);
@@ -149,7 +182,7 @@ _end:
 
 	BCC_RESP_SET_RES(rc);
 	BCC_RESP_SET_PAYLOAD_LEN(0x01);
-	BCC_RESP_SET_WORD(0,0xFFFF);
+	BCC_RESP_SET_WORD(0, 0xFFFF);
 
 	return rc;
 }
@@ -158,7 +191,7 @@ UCHAR bcc_confirm_output_state(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);
 	BCC_RESP_SET_PAYLOAD_LEN(0x01);
-	BCC_RESP_SET_WORD(0,0xFFFF);					// dummy payload
+	BCC_RESP_SET_WORD(0, 0xFFFF);					// dummy payload
 
 	return confirm_output_state();
 }
@@ -187,7 +220,23 @@ UCHAR bcc_get_boot_count(void)
 {
 	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);
 	BCC_RESP_SET_PAYLOAD_LEN(0x01);
-	BCC_RESP_SET_WORD(0,get_boot_count());
+	BCC_RESP_SET_WORD(0, get_boot_count());
 
 	return 1;
+}
+
+UCHAR bcc_start_status_stream(void)
+{
+	bin_context.is_stream_active = 1;
+
+	BCC_RESP_SET_RES(RESP_MSG_SUCCESS_CODE);
+	BCC_RESP_SET_PAYLOAD_LEN(0x01);
+	BCC_RESP_SET_WORD(0, 0xFFFF);					// dummy payload
+
+	return 1;
+}
+
+UCHAR bcc_get_board_status(void)
+{
+	return 0;
 }

@@ -89,6 +89,11 @@ UCHAR bcc_set_l1_cal_val(void);
  */
 UCHAR bcc_set_l2_cal_val(void);
 
+UCHAR bcc_start_status_stream(void);
+
+UCHAR bcc_get_board_status(void);
+
+void process_binary_stream(void);
 /**
  * Sends out via serial port the number of times the IO processor has rebooted.
  * We're using that as the boot count of the board.

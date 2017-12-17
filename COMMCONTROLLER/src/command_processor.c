@@ -55,24 +55,63 @@ void init_command_processor(void)
 
 	mem_clear(&bin_context, sizeof (binary_message_context));
 
-	binary_command_callbacks[0x0] = bcc_reset;
 	binary_command_callbacks[0x1] = bcc_get_ai_status;
 	binary_command_callbacks[0x2] = bcc_get_do_status;
-	binary_command_callbacks[0x3] = bcc_set_do_status;
-	binary_command_callbacks[0x4] = bcc_get_pmic_status;
-	binary_command_callbacks[0x5] = bcc_set_pmic_status;
-	binary_command_callbacks[0x6] = bcc_get_l1_cal_val;
-	binary_command_callbacks[0x7] = bcc_get_l2_cal_val;
-	binary_command_callbacks[0x8] = bcc_set_l1_cal_val;
-	binary_command_callbacks[0x9] = bcc_set_l2_cal_val;
-	binary_command_callbacks[0xA] = bcc_get_boot_count;
-	binary_command_callbacks[0xB] = bcc_confirm_output_state; // XXX - this will be the get board stats stuff
+	binary_command_callbacks[0x3] = bcc_get_pmic_status;
+	binary_command_callbacks[0x4] = bcc_get_l1_cal_val;
+	binary_command_callbacks[0x5] = bcc_get_l2_cal_val;
+	binary_command_callbacks[0x6] = bcc_get_boot_count;
+	binary_command_callbacks[0x7] = bcc_get_board_status;	// XXX - not implemented
+
+	binary_command_callbacks[0x8] = bcc_set_do_status;
+	binary_command_callbacks[0x9] = bcc_set_pmic_status;
+	binary_command_callbacks[0xA] = bcc_set_l1_cal_val;
+	binary_command_callbacks[0xB] = bcc_set_l2_cal_val;
+
 	binary_command_callbacks[0xC] = bcc_confirm_output_state;
+	binary_command_callbacks[0xD] = bcc_start_status_stream;
+
+	binary_command_callbacks[0xE] = bcc_reset;
 
 	return;
 
 }
 
+void process_binary_stream(void)
+{
+	UINT ci;
+
+	for(ci=0x01;ci<=0x07;ci++)
+	{
+		bin_context.output_buffer_idx = 0;
+		BCC_RESP_CLEAR_HEADER();
+
+		BCC_RESP_SET_MARKER();
+		BCC_RESP_SET_CI(ci);
+
+		/*
+		 * The command processing function will output the rest of the data into the buffer.
+		 */
+		if (binary_command_callbacks[ci]() != 1)
+		{
+			serial_protocol_errors.bin_cmd_cb_fail += 1;
+			BCC_RESP_SET_RES(0xFF00 & bin_context.output_buffer_w[RESP_MSG_RESP_FIELD_IDX_W]);  // Really make sure that the result code is not 0
+		}
+
+
+		bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] += 1;
+		bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] = bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] * 2;
+		bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = 0;	// Clear the checksum field otherwise we get a funny checksum
+		UINT chksum = checksum(bin_context.output_buffer_w, bin_context.output_buffer_idx / 2);
+		bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = chksum;
+
+		ser_write_data(bin_context.output_buffer, bin_context.output_buffer_idx);
+	}
+
+	ser_flush_buffer();
+
+	return;
+}
 UCHAR process_binary_command(void)
 {
 	/*
@@ -126,12 +165,13 @@ _end:
 		BCC_RESP_SET_WORD(0, 0xFFFF);
 	}
 
-
 	bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] += 1;
 	bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] = bin_context.output_buffer_w[REP_MSG_PAYLOAD_LEN_IDX_W] * 2;
 	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = 0;	// Clear the checksum field otherwise we get a funny checksum
 	UINT chksum = checksum(bin_context.output_buffer_w, bin_context.output_buffer_idx / 2);
 	bin_context.output_buffer_w[BCC_MAKE_W_OFFSET((bin_context.output_buffer_idx - 1))] = chksum;
+
+
 
 	ser_write_data(bin_context.output_buffer, bin_context.output_buffer_idx);
 	ser_flush_buffer();

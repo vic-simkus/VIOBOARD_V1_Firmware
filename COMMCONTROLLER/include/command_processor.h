@@ -31,6 +31,8 @@ void init_command_processor(void);
 void reset_bin_context(void);
 void reset_command_processor_state(void);
 
+void process_binary_stream(void);
+
 /**
  * Binary command callback function pointer
  */
@@ -72,6 +74,8 @@ typedef struct {
 	UINT start_index;
 
 	UINT output_buffer_idx;
+
+	UINT is_stream_active;
 
 	union {
 		UCHAR output_buffer[BCC_OUTPUT_BUFFER_SIZE];
@@ -123,7 +127,7 @@ extern binary_message_context bin_context;
 /**
  * Number of implemented binary messages.  Used to size the callback pointer array.
  */
-#define BINARY_COMMAND_COUNT 0x0D
+#define BINARY_COMMAND_COUNT 0x0F
 
 #endif	/* COMMAND_PROCESSOR_H */
 
