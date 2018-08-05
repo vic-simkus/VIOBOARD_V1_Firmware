@@ -436,7 +436,9 @@ extern void i2c_resume_module(void);
  *
  ***************************************************************************/
 
-/*
+/**
+ * Waits for the local chip I2C module to be idle.
+ *
  * 0x4000 = 0b0100 0000 0000 0000 (TRSTAT)
  * 0x1F   = 0b0000 0000 0001 1111 (SEN,RSEN,PEN,RCEN,ACKEN)
  * SEN - Start Condition Enabled (master)
@@ -446,17 +448,22 @@ extern void i2c_resume_module(void);
  * ACKEN - Acknowledge Sequence Enable (master)
  */
 
-#define I2C_WAIT_I2CCON_L5() while(I2CCON & 0x1F){Nop();}
+#define I2C_WAIT_I2CCON_L5() while(I2CCON & 0x001F){Nop();}
 
 /**
  * S and P are bits 3 and 4 in the I2CSTAT register
  * 0x18 = 0b0000 0000 0001 1000
  */
-#define I2C_WAIT_IDLE_BUS() while(I2CSTATbits.P == 0 && I2CSTATbits.S == 1) {Nop();}
+//#define I2C_WAIT_IDLE_BUS() while(I2CSTATbits.P == 0 && I2CSTATbits.S == 1) {Nop();}
+
+/**
+ * Wait until the lower 5 bits of I2CSTAT are clear which indicate an idle bus according to the Microchip docs.
+ */
+#define I2C_WAIT_IDLE_BUS() while(I2CSTAT & 0x000F) {Nop();}
 
 
 /// Wait for the read buffer to fill.  1 == receive complete, 0 == receive not complete.
-#define WAIT_FOR_RBF() 	while(I2CSTATbits.RBF == 0){Nop();}
+//#define WAIT_FOR_RBF() 	while(I2CSTATbits.RBF == 0){Nop();}
 
 
 /// Wait for the transmit  buffer to become empty. 1 == transmit in progress, 0 == transmit complete

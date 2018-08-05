@@ -357,7 +357,7 @@ Level 0 functions
 
 inline UCHAR i2c_bus_start(void)
 {
-	I2C_WAIT_IDLE_BUS();
+	//I2C_WAIT_IDLE_BUS();
 
 	I2CCONbits.SEN = 1;
 
@@ -373,6 +373,8 @@ inline UCHAR i2c_bus_start(void)
 	else
 	{
 		last_write_error = I2C_ERR_COLLISION;
+		I2CSTATbits.P = 0;
+		I2CSTATbits.S = 0;
 		return 0;
 	}
 }
@@ -395,6 +397,8 @@ inline UCHAR i2c_bus_restart(void)
 	else
 	{
 		last_write_error = I2C_ERR_COLLISION;
+		I2CSTATbits.P = 0;
+		I2CSTATbits.S = 0;
 		return 0;
 	}
 }
@@ -402,6 +406,8 @@ inline UCHAR i2c_bus_restart(void)
 inline UCHAR i2c_bus_stop(void)
 {
 	I2C_WAIT_I2CCON_L5();
+
+	UCHAR rc;
 
 	I2CCONbits.PEN = 1;
 
@@ -412,13 +418,17 @@ inline UCHAR i2c_bus_stop(void)
 
 	if (I2CSTATbits.BCL == 0)
 	{
-		return 1;
+		rc = 1;
 	}
 	else
 	{
 		last_write_error = I2C_ERR_COLLISION;
-		return 0;
+		I2CSTATbits.P = 0;
+		I2CSTATbits.S = 0;
+		rc =  0;
 	}
+
+	return rc;
 }
 
 inline UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart)
