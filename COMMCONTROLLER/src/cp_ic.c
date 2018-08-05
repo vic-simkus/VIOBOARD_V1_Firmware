@@ -243,7 +243,7 @@ UCHAR cmd_set_pmic(void)
 		goto _end;
 	}
 
-	if (pmic_flag != 'E' && pmic_id != 'F')
+	if (pmic_flag != 'E' && pmic_flag != 'F')
 	{
 		ser_write_string("!Invalid PMIC flag [");
 		ser_write_char(pmic_flag);
