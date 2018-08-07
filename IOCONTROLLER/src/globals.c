@@ -18,9 +18,15 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #define __GLOBALS_H_INT
 #include "globals.h"
 
-//eeprom_data_struct eeprom_data;
-//eeprom_data_struct working_eeprom_data;
-
+/**
+ * Our eeprom struct is two lines in size.  Each size is 16 words.
+ * Thus each struct is 32 words in size.  Each word is 2 bytes.  So each
+ * struct is 64 bytes in size.  64 = 0x40
+ *
+ * EEPROM_SIZE_LINES = 32
+ *
+ * Since each struct is 2 lines in size, total number of offsets is 16 or (EEPROM_SIZE_LINES / 2)
+ */
 const UINT EEPROM_DATA_OFFSETS[EEPROM_SIZE_LINES / 2] = {
 	EEPROM_START_ADDR + (0x40 * 0x00),
 	EEPROM_START_ADDR + (0x40 * 0x01),

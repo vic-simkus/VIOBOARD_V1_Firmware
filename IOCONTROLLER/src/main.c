@@ -90,6 +90,9 @@ int main(void)
 
 	eeprom_readin_data();
 
+	/*
+	 * Initialized eeprom_init value is 0xDEAD.  Uninitialized eeprom value is 0xFFFF
+	 */
 	if (eeprom_data.eeprom_init == 0xFFFF || eeprom_data.eeprom_init != 0xDEAD)
 	{
 

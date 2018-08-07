@@ -69,10 +69,15 @@ ULONG eeprom_get_max_serial_ex(void)
 		}
 	}
 
+	/*
+	 * We pack two 16 bit values into a 32 bit long
+	 */
 	ULONG ret;
 
 	ret = offset;
+	// Move the offset into the upper 16 bits...
 	ret = ret << 16;
+	// Add the max_sv
 	ret |= max_sv;
 
 	return ret;
@@ -109,12 +114,19 @@ void eeprom_writeout_data(void)
 
 	eeprom_data.serial = serial;
 
+	/*
+	 * We must erase lines before we write to them.
+	 */
 	eeprom_erase_line((void *) EEPROM_DATA_OFFSETS[offset]);
 	eeprom_erase_line((void *) EEPROM_DATA_OFFSETS[offset] + 0x20);
 
+	/*
+	 * The eeprom struct is 2 lines in size.  Hence the two writes.
+	 */
 	eeprom_write_line((void *) EEPROM_DATA_OFFSETS[offset], ((void *) &eeprom_data));
 	eeprom_write_line((void *) EEPROM_DATA_OFFSETS[offset] + 0x20, ((void *) &eeprom_data) + 0x20);
 
+	// Reset the dirty flag.
 	eeprom_data.is_dirty = 0;
 
 	SRbits.IPL = ipl;

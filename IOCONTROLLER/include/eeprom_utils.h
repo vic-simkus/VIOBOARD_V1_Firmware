@@ -45,7 +45,7 @@ void eeprom_writeout_data(void);
 void eeprom_readin_data(void);
 
 /**
- * Searches the EPPROM data and returnes the offset where the next instance should be written to and that instances serial number.
+ * Searches the EPPROM data and returns the offset where the next instance should be written to and that instances serial number.
  * \return Two 16 bit values packed into a 32 bit integer.  The upper 16 bits is the index into the offset array.  The lower 16 bits is the serial number.
  */
 ULONG eeprom_get_next_serial_ex(void);

@@ -40,6 +40,7 @@ GI_EXT void globals_recalc_cal_values(void);
 
 /**
  * AI calibration values.
+ * Size: 8 x words or 32 bytes
  */
 typedef struct {
 	UINT cal_0;
@@ -97,11 +98,15 @@ typedef struct _eeprom_data_struct {
 		UINT l2_cal_data_arr[AD_INPUT_NUM];
 	};
 
+	// ^^^ 20 words
+
 	/**
 	 * Pad buffer.
 	 * NOTE - make sure to decrement as fields are added
 	 */
 	UINT pad[12];
+
+	// Total of 32 words or 64 bytes (0x40 bytes.)
 } eeprom_data_struct;
 
 
