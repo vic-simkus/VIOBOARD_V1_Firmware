@@ -32,6 +32,12 @@ void setup_adc(void)
 	/*
 	 * Configure the ADC parameters
 	 */
+
+	/*
+	 * Our Fosc is 40Mhz (10Mhz xtal * x4 PLL).
+	 * Fcy is Fosc/4. and Tcy = 1/Fcy
+	 */
+
 	ADCON1bits.FORM = 0;		// unsigned integer format
 	ADCON1bits.SSRC = 0b111;	// Conversion trigger source - internal counter
 
@@ -41,17 +47,25 @@ void setup_adc(void)
 	ADCON2bits.ALTS = 0;		// Always use MUX A input settings
 	ADCON2bits.BUFM = 0;		// buffer configures as one 16 word buffer
 
-	ADCON3bits.SAMC = 0x0F;	// Auto sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
-	ADCON3bits.ADRC = 1;	// internal rc clock
+	ADCON3bits.ADRC = 0;		// Disable internal RC
+	ADCON3bits.ADCS = 1;		// Set Tad to Tcy - 100nS
+
+	ADCON3bits.SAMC = 20;		// Sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
+								// We're shooing for a 666.66nS sample time. At Fcy of 10Mhz Tcy is 100nS.
+								// So with SAMC of 20 sample time is 2uS
 
 
-	TRISB = 0;
-	ADPCFG = 0;
-	ADPCFG = 1;
+	//DCON3bits.SAMC = 0x1;	// Auto sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
+	//ADCON3bits.ADRC = 1;	// internal rc clock
 
 	/*
-	 * Set pins as analog inputs
+	 * Set tri-state mode for pins to input
 	 */
+
+	// Reset all to output.
+	TRISB = 0;
+
+	// Selectively configure individual ports to input
 	TRISBbits.TRISB1 = 1;	//ICD3 -- T7
 	TRISBbits.TRISB2 = 1;	//ICD4 -- T8
 	TRISBbits.TRISB3 = 1;	//420_4 -- T4
@@ -67,12 +81,21 @@ void setup_adc(void)
 	ADCSSL = TRISB;
 
 	TRISBbits.TRISB0 = 1;	// VrefH reference
+							// NOTE: We set the TRISB0 port to input here so as not to include it in the auto-scan flags
 
 	/*
 	 * Configure ports as ADC
 	 */
 
-	ADPCFGbits.PCFG0 = 0;
+	// Set all ports to digital
+
+	ADPCFG = 1;
+
+
+	// Selectively enable analog inputs
+
+
+	ADPCFGbits.PCFG0 = 0;	// VrefH input
 	ADPCFGbits.PCFG1 = 0;
 	ADPCFGbits.PCFG2 = 0;
 	ADPCFGbits.PCFG3 = 0;
@@ -81,6 +104,10 @@ void setup_adc(void)
 	ADPCFGbits.PCFG8 = 0;
 	ADPCFGbits.PCFG9 = 0;
 	ADPCFGbits.PCFG10 = 0;
+
+	/*
+	 * Starts the conversion process
+	 */
 
 	ADCON1bits.ASAM = 1;	// automatically start after last conversion
 
