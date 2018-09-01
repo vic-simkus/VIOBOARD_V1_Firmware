@@ -48,15 +48,11 @@ void setup_adc(void)
 	ADCON2bits.BUFM = 0;		// buffer configures as one 16 word buffer
 
 	ADCON3bits.ADRC = 0;		// Disable internal RC
-	ADCON3bits.ADCS = 1;		// Set Tad to Tcy - 100nS
+	ADCON3bits.ADCS = 2;		// Set Tad to Tcy - 200nS
 
-	ADCON3bits.SAMC = 20;		// Sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
-								// We're shooing for a 666.66nS sample time. At Fcy of 10Mhz Tcy is 100nS.
-								// So with SAMC of 20 sample time is 2uS
-
-
-	//DCON3bits.SAMC = 0x1;	// Auto sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
-	//ADCON3bits.ADRC = 1;	// internal rc clock
+	ADCON3bits.SAMC = 0b00100;	// Sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
+								// We're shooing for a 666.66nS sample time. At Fcy of 10Mhz Tcy is 100nS.  Tad is Tcy * 2 or 200nS
+								// So with SAMC of 4 sample time is 800nS
 
 	/*
 	 * Set tri-state mode for pins to input
