@@ -72,7 +72,16 @@ int main(void)
 	globals_init();
 
 	setup_status_led_pins();
+
+	/*
+	 * Heart-beat LED and watchdog timer reset.
+	 */
 	setup_T1();
+
+	/*
+	 * ADC conversion trigger
+	 */
+	setup_T3();
 
 	setup_do_pins();
 	setup_adc();

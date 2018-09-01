@@ -39,7 +39,8 @@ void setup_adc(void)
 	 */
 
 	ADCON1bits.FORM = 0;		// unsigned integer format
-	ADCON1bits.SSRC = 0b111;	// Conversion trigger source - internal counter
+	//ADCON1bits.SSRC = 0b111;	// Conversion trigger source - internal counter
+	ADCON1bits.SSRC = 0b010;	// Conversion trigger source - timer 3
 
 	ADCON2bits.VCFG = 0b001;	// use VRef+ pin for VrefH and and AVss for VrefL
 	ADCON2bits.CSCNA = 1;		// scan inputs
@@ -48,7 +49,7 @@ void setup_adc(void)
 	ADCON2bits.BUFM = 0;		// buffer configures as one 16 word buffer
 
 	ADCON3bits.ADRC = 0;		// Disable internal RC
-	ADCON3bits.ADCS = 2;		// Set Tad to Tcy - 200nS
+	ADCON3bits.ADCS = 2;		// Set Tad to Tcy*2 - 200nS
 
 	ADCON3bits.SAMC = 0b00100;	// Sample time.  Number of Tad cycles the ADC will spend sampling before starting conversion
 								// We're shooing for a 666.66nS sample time. At Fcy of 10Mhz Tcy is 100nS.  Tad is Tcy * 2 or 200nS
@@ -353,5 +354,27 @@ void setup_T1()
 	IEC0bits.T1IE = 1; // Enable T1 interrupt
 
 	T1CONbits.TON = 1; // start timer
+	return;
+}
+
+void setup_T3()
+{
+	/*
+	 * Sets up the timer for ADC use.
+	 * We want to sample all 8 analog inputs four times per second. So that's 32 (4*8) ADC conversions per second.
+	 *
+	 * With a 256:1 prescaler, the timer clicks every 25600nS or 25.600uS with Tcy = 100nS.
+	 *
+	 * We want to do 32 reads per second so thats a read every 0.031,250 seconds or every 31.25mS
+	 *
+	 * With the timer clicking every 0.025,600 mS we need to interrupt every (31.250/0.025,600) clicks
+	 *
+	 * NOTE: The ADC interrupt is set to fire every 8 conversions.
+	 */
+	T3CONbits.TCKPS = 0b11;		//1:256 prescaler
+	TMR3 = 0;					// Clear register
+	PR3 = 1220;					// Every 1220 clicks
+	T3CONbits.TON = 1;			// Start timer
+
 	return;
 }

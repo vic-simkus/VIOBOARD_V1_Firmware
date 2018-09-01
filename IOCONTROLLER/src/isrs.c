@@ -47,6 +47,26 @@ void __attribute__((interrupt, no_auto_psv))  	_ADCInterrupt(void)
 	AD_BUFFER[6] = ADCBUF0 + AD_CAL_OFFSET_BUFFER[6];
 	AD_BUFFER[7] = ADCBUF1 + AD_CAL_OFFSET_BUFFER[7];
 
+	/*
+	 * In case of a negative calibration offset we can underflow.
+	 * Fix the underflow here.
+	 *
+	 * We also hand the zero goofiness.  For example if the offset is 5 with
+	 * nothing connected to the analog input, the value read out is 5.  Which is weird
+	 * since it should be at zero.
+	 *
+	 * This is probably not the best way to do it, but my issue is with reading being
+	 * wrong, not not (double negative!) having a zero.
+	 */
+
+	UINT i = 0;
+	for (i = 0; i < 8; i++)
+	{
+		if(AD_BUFFER[i] > 4096 || AD_BUFFER[i] == AD_CAL_OFFSET_BUFFER[i])
+		{
+			AD_BUFFER[i] = 0;
+		}
+	}
 
 	IFS0bits.ADIF = 0;
 

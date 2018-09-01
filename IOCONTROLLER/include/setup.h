@@ -33,6 +33,7 @@ extern void setup_pmics(void);
 extern void setup_status_led_pins();
 extern void setup_do_pins(void);
 extern void setup_T1();
+extern void setup_T3();
 
 #endif	/* INIT_H */
 
