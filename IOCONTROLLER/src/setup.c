@@ -220,7 +220,7 @@ void setup_i2c_custom_registers(void)
 	i2c_registers.count += 1;
 
 	/*
-	 * Setup boot counter getter callback
+	 * Setup output confirmation callback
 	 * Register: 0x11
 	 */
 	i2c_registers.register_list[i2c_registers.count].ro = 0;
