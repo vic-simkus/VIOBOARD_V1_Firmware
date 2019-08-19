@@ -16,3 +16,6 @@
 /SUPPORT/dist/PIC24FV32KA302/
 Makefile-*
 Package-*
+/BBB_CAPE/nbproject/private/
+/BBB_CAPE/build/default/
+/BBB_CAPE/dist/default/
