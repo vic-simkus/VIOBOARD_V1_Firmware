@@ -37,212 +37,214 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 extern UINT ib_idx;
 
-void main_event_loop(void)
+void main_event_loop( void )
 {
-	mem_clear(mg_command_buffer, COMMAND_BUFFER_SIZE);
-	mem_clear(mg_separator_buffer, COMMAND_SEPARATOR_BUFFER_SIZE);
+    mem_clear( mg_command_buffer, COMMAND_BUFFER_SIZE );
+    mem_clear( mg_separator_buffer, COMMAND_SEPARATOR_BUFFER_SIZE );
 
-	UCHAR c = 0;
-	UINT idx = 0;
+    UCHAR c = 0;
+    UINT idx = 0;
 
-	UINT loop_counter = 0;
+    UINT loop_counter = 0;
 
-	for (; ; )
+    for(;; )
+    {
+	ser_switch_input_buffers( );
+
+	for( idx = 0; idx < ser_input_buffer_b_idx; idx++ )
 	{
-		ser_switch_input_buffers();
+	    c = ser_input_buffer_b[idx];
 
-		for (idx = 0; idx < ser_input_buffer_b_idx; idx++)
+	    /*
+	     * Put character into buffer and advance index.
+	     * Duh.
+	     */
+
+	    mg_command_buffer[mg_cmd_buffer_idx] = c;
+	    mg_cmd_buffer_idx += 1;
+
+	    if( bin_context.is_active == 1 )
+	    {
+		/*
+		 * In binary mode
+		 */
+		if( bin_context.count == 0 && bin_context.start_index == 0 )
 		{
-			c = ser_input_buffer_b[idx];
-
-			/*
-			 * Put character into buffer and advance index.
-			 * Duh.
-			 */
-
-			mg_command_buffer[mg_cmd_buffer_idx] = c;
-			mg_cmd_buffer_idx += 1;
-
-			if (bin_context.is_active == 1)
-			{
-				/*
-				 * In binary mode
-				 */
-				if (bin_context.count == 0 && bin_context.start_index == 0)
-				{
-					/*
-					 * Length MSB
-					 */
-					bin_context.length_msb = c;
-					bin_context.count += 1;
-				}
-				else if (bin_context.count == 1 && bin_context.start_index == 0)
-				{
-					/*
-					 * Length LSB
-					 */
-					bin_context.expected_length = ((UINT) bin_context.length_msb) << 8;
-					bin_context.expected_length |= c;
-
-					bin_context.start_index = mg_cmd_buffer_idx;
-					bin_context.count = 0;
-				}
-				else
-				{
-					/*
-					 * At this point we have the expected binary length.
-					 */
-
-					/*
-					 * We only advance the received binary data
-					 */
-					bin_context.count += 1;
-
-					if (bin_context.count == bin_context.expected_length)
-					{
-						process_binary_command();
-					}
-				}
-			}// in  binary mode
-			else
-			{
-				if (c == '@')
-				{
-					bin_context.is_active = 1;
-
-					/*
-					 * Once binary mode is initiated we expect the next two bytes to be
-					 * expected length in little endian format with MSB transmitted first.
-					 */
-				}
-				else if (c == '\n' || c == '\r')
-				{
-					/*
-					 * text mode
-					 */
-
-					if (mg_cmd_buffer_idx > 1)
-					{
-						mg_cmd_buffer_idx = mg_cmd_buffer_idx - 1;
-						mg_command_buffer[mg_cmd_buffer_idx] = 0;
-						process_text_command();
-
-						reset_command_processor_state();
-					}
-					else
-					{
-						reset_command_processor_state();
-					}
-
-				}
-				else if (c == ' ' || c == '\t')
-				{
-					mg_separator_buffer[mg_sep_buffer_idx] = mg_cmd_buffer_idx - 1;
-					mg_sep_buffer_idx += 1;
-				}
-
-			} // not in binary mode.
-
-			if (mg_sep_buffer_idx == COMMAND_SEPARATOR_BUFFER_SIZE || mg_cmd_buffer_idx == COMMAND_BUFFER_SIZE)
-			{
-				/*
-				 * We're utilizing the command buffer in circular mode.  All indexes into it for reading are mod 32.
-				 * Resetting of the separator index will reset the text mode stuff, but text mode shouldn't be sending that much data to begin with.  Fools.
-				 */
-				reset_command_processor_state();
-			}//Buffer overflow
-		}//Loop through the input buffer
-
-		if (bin_context.is_stream_active)
+		    /*
+		     * Length MSB
+		     */
+		    bin_context.length_msb = c;
+		    bin_context.count += 1;
+		}
+		else if( bin_context.count == 1 && bin_context.start_index == 0 )
 		{
-			/*
-			 * XXX - Magic number.  60000 iterations is approximately four times a second.
-			 */
-			if (loop_counter == 60000)
-			{
-				process_binary_stream();
-				loop_counter = 0;
-			}
+		    /*
+		     * Length LSB
+		     */
+		    bin_context.expected_length = ( ( UINT ) bin_context.length_msb ) << 8;
+		    bin_context.expected_length |= c;
 
-			loop_counter += 1;
+		    bin_context.start_index = mg_cmd_buffer_idx;
+		    bin_context.count = 0;
+		}
+		else
+		{
+		    /*
+		     * At this point we have the expected binary length.
+		     */
+
+		    /*
+		     * We only advance the received binary data
+		     */
+		    bin_context.count += 1;
+
+		    if( bin_context.count == bin_context.expected_length )
+		    {
+			process_binary_command( );
+		    }
+		}
+	    }// in  binary mode
+	    else
+	    {
+		if( c == '@' )
+		{
+		    bin_context.is_active = 1;
+
+		    /*
+		     * Once binary mode is initiated we expect the next two bytes to be
+		     * expected length in little endian format with MSB transmitted first.
+		     */
+		}
+		else if( c == '\n' || c == '\r' )
+		{
+		    /*
+		     * text mode
+		     */
+
+		    if( mg_cmd_buffer_idx > 1 )
+		    {
+			mg_cmd_buffer_idx = mg_cmd_buffer_idx - 1;
+			mg_command_buffer[mg_cmd_buffer_idx] = 0;
+			process_text_command( );
+
+			reset_command_processor_state( );
+		    }
+		    else
+		    {
+			reset_command_processor_state( );
+		    }
+
+		}
+		else if( c == ' ' || c == '\t' )
+		{
+		    mg_separator_buffer[mg_sep_buffer_idx] = mg_cmd_buffer_idx - 1;
+		    mg_sep_buffer_idx += 1;
 		}
 
-		i2c_logger_flush();
-	} // Main loop
-}
+	    } // not in binary mode.
 
-int main(void)
-{
-	//scs_overflow_errors = 0;
-	RCON = 0x0;
+	    if( mg_sep_buffer_idx == COMMAND_SEPARATOR_BUFFER_SIZE || mg_cmd_buffer_idx == COMMAND_BUFFER_SIZE )
+	    {
+		/*
+		 * We're utilizing the command buffer in circular mode.  All indexes into it for reading are mod 32.
+		 * Resetting of the separator index will reset the text mode stuff, but text mode shouldn't be sending that much data to begin with.  Fools.
+		 */
+		reset_command_processor_state( );
+	    }//Buffer overflow
+	}//Loop through the input buffer
 
-	Nop();	//A place the debugger can call home
-
-	init_globals();
-	init_command_processor();
-
-	/*Configure oscilator*/
-
-	REFOCONbits.ROSSLP = 1;
-	REFOCONbits.ROSEL = 1;
-	REFOCONbits.RODIV = 0;
-
-	REFOCONbits.ROEN = 1;
-
-	SRbits.IPL = 0;				// set CPU interrupt priority to zero (all interrupts will fire)
-	INTCON1bits.NSTDIS = 1;		// disable nested interrupts.
-
-	ANSA = 0;
-	ANSB = 0;					// Claim all pins from greedy AD module
-
-	STAT_LED_TRIS = 0;			// Status LED on pin 25
-
-	logger_init(LOGGER_LEVEL_DEBUG);
-
-	rtcc_init();
-
-	//ser_init(34, 1, 7, 0xFFFF);
-	ser_init(207, 1, 5, 0xFFFF);
-
-	ser_write_char(0x00);
-	ser_write_char(0x00);
-	ser_write_char(0x00);
-	ser_write_char(0x00);
-	ser_write_char(0x00);
-	ser_write_char(0x00);
-	ser_flush_buffer();
-
-	ser_write_char('\n');
-	logger_debug("RS232 OK.");
-
-	i2c_setup_default_registers();
-	i2c_logger_reg_init();
-
-	/*
-	 * 0x9D I2C1BRG value is based on a 16MHz Fcy and desired bus speed of 100kHz
-	 * 0x25 I2C1BRG value is based on a 16MHz Fcy and desired bys speed of 400KHz
-	 */
-	i2c_init(4, I2C_ADDR_COMM_CTRL, 0x25);
-
-	logger_debug("I2C OK.");
-
-	sn_init(1000, 10);
-
-	ser_write_char('#');
-	while (1)
+	if( bin_context.is_stream_active )
 	{
-		ser_write_char('*');
-		if (sn_ping(I2C_ADDR_IO_CTRL))
-		{
-			break;
-		}
-		__delay_ms(1000);
+	    /*
+	     * XXX - Magic number.  60000 iterations is approximately four times a second.
+	     */
+	    if( loop_counter == 60000 )
+	    {
+		process_binary_stream( );
+		loop_counter = 0;
+	    }
+
+	    loop_counter += 1;
 	}
 
-	ser_write_char('\n');
-	logger_protocol("F CC. CC UP. IC SU.");
+	i2c_logger_flush( );
+    } // Main loop
+}
 
-	main_event_loop();
+int main( void )
+{
+    //scs_overflow_errors = 0;
+    RCON = 0x0;
 
-	return 0;
+    Nop( ); //A place the debugger can call home
+
+    init_globals( );
+    init_command_processor( );
+
+    /*Configure oscilator*/
+
+    REFOCONbits.ROSSLP = 1;
+    REFOCONbits.ROSEL = 1;
+    REFOCONbits.RODIV = 0;
+
+    REFOCONbits.ROEN = 1;
+
+    SRbits.IPL = 0; // set CPU interrupt priority to zero (all interrupts will fire)
+    INTCON1bits.NSTDIS = 1; // disable nested interrupts.
+
+    ANSA = 0;
+    ANSB = 0; // Claim all pins from greedy AD module
+
+    STAT_LED_TRIS = 0; // Status LED on pin 25
+
+    logger_init( LOGGER_LEVEL_DEBUG );
+
+    rtcc_init( );
+
+    //ser_init(34, 1, 7, 0xFFFF);
+
+    // 207 == 19.2
+    ser_init( 207, 1, 5, 0xFFFF );
+
+    ser_write_char( 0x00 );
+    ser_write_char( 0x00 );
+    ser_write_char( 0x00 );
+    ser_write_char( 0x00 );
+    ser_write_char( 0x00 );
+    ser_write_char( 0x00 );
+    ser_flush_buffer( );
+
+    ser_write_char( '\n' );
+    logger_debug( "RS232 OK." );
+
+    i2c_setup_default_registers( );
+    i2c_logger_reg_init( );
+
+    /*
+     * 0x9D I2C1BRG value is based on a 16MHz Fcy and desired bus speed of 100kHz
+     * 0x25 I2C1BRG value is based on a 16MHz Fcy and desired bys speed of 400KHz
+     */
+    i2c_init( 4, I2C_ADDR_COMM_CTRL, 0x25 );
+
+    logger_debug( "I2C OK." );
+
+    sn_init( 1000, 10 );
+
+    ser_write_char( '#' );
+    while( 1 )
+    {
+	ser_write_char( '*' );
+	if( sn_ping( I2C_ADDR_IO_CTRL ) )
+	{
+	    break;
+	}
+	__delay_ms( 1000 );
+    }
+
+    ser_write_char( '\n' );
+    logger_protocol( "F CC. CC UP. IC SU." );
+
+    main_event_loop( );
+
+    return 0;
 } // Main function

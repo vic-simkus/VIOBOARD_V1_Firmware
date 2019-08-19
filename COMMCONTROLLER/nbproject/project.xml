@@ -14,6 +14,20 @@
             <make-dep-projects>
                 <make-dep-project>../SUPPORT</make-dep-project>
             </make-dep-projects>
+            <sourceRootList>
+                <sourceRootElem>include</sourceRootElem>
+                <sourceRootElem>src</sourceRootElem>
+                <sourceRootElem>dist/PIC24FV32KA302/debug</sourceRootElem>
+            </sourceRootList>
+            <confList>
+                <confElem>
+                    <name>PIC24FV32KA302</name>
+                    <type>2</type>
+                </confElem>
+            </confList>
+            <formatting>
+                <project-formatting-style>false</project-formatting-style>
+            </formatting>
         </data>
     </configuration>
 </project>
