@@ -13,7 +13,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef __I2C_H
 #define __I2C_H
@@ -40,9 +40,9 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 typedef struct
 {
-	UINT write_errors;
-	UINT read_errors;
-	UINT collisions;
+    UINT write_errors;
+    UINT read_errors;
+    UINT collisions;
 } I2C_COMM_STATS;
 
 extern volatile I2C_COMM_STATS i2c_comm_stats;
@@ -147,162 +147,171 @@ I2C Master will be reading from slave
  */
 #define I2C_RW_R	1
 
+/**
+ * The I2C_SLAVE_REGISTER_COUNT is expected to be defined by the user of the library (in the project config, for example).
+ * The number is expected to be the TOTAL number of I2C registers. I.e. I2C_REG_COUNT__	 + <number of custom register>
+ * So if I2C_REG_COUNT__ is 7 and the using code implements 3 more custom registers, this define should be set to 10.
+ */
 #ifndef I2C_SLAVE_REGISTER_COUNT
 #error "Must define I2C_SLAVE_REGISTER_COUNT"
 #endif
 
 #define I2C_BUS_RETRIES 10
 
-
 /**
 Various errors that the library may produce.  The last_read_error and last_write_error will be set to these values
  */
-enum {
-	I2C_ERR_NONE = 0,		///	0 -- No error
-	I2C_ERR_R_OVR,			/// 1 -- Receive error; read overflow.
-	I2C_ERR_R_TIMEOUT,		///	2 -- Read timeout
-	I2C_ERR_W_NACK_CTRL,	///	3 -- Send error; slave did not acknowledge control byte
-	I2C_ERR_W_NACK_DATA,	///	4 -- Send error, slave did not acknowledge data byte
-	I2C_ERR_W_TIMEOUT,		/// 5 -- Write timeout
-	I2C_ERR_COLLISION		/// 6 -- Generic collision.  May be either a write collision or a master collision.  Reason for a generic collision is because it doesn't ultimately matter what kind of collision it is.  Everything must be resent from the beginning.
-} ;
+enum
+{
+    I2C_ERR_NONE = 0, ///	0 -- No error
+    I2C_ERR_R_OVR, ///	1 -- Receive error; read overflow.
+    I2C_ERR_R_TIMEOUT, ///	2 -- Read timeout
+    I2C_ERR_W_NACK_CTRL, ///	3 -- Send error; slave did not acknowledge control byte
+    I2C_ERR_W_NACK_DATA, ///	4 -- Send error, slave did not acknowledge data byte
+    I2C_ERR_W_TIMEOUT, ///	5 -- Write timeout
+    I2C_ERR_COLLISION ///	6 -- Generic collision.  May be either a write collision or a master collision.  Reason for a generic collision is because it doesn't ultimately matter what kind of collision it is.  Everything must be resent from the beginning.
+};
 
 #ifdef I2C_ERROR_STRINGS
 /**
  * Provides human-readable error messages
  */
-extern const UCHAR * const  I2C_ERROR_MAP[];
+extern const UCHAR * const I2C_ERROR_MAP[];
 #endif
 
 /**
 These are the default registers that are implemented by the i2c_setup_default_registers function.
 \see i2c_setup_default_registers
  */
-enum {
-	/**
-	 * A null register.  Reading from it produces all zeros and writing to it sinks the input
-	 */
-	I2C_REG_NULL = 0,
+enum
+{
+    /**
+     * A null register.  Reading from it produces all zeros and writing to it sinks the input
+     */
+    I2C_REG_NULL = 0,
 
-	/**
-	 * A write of 0xAA to this register will reset the chip
-	 */
-	I2C_REG_RESET = 1 ,
+    /**
+     * A write of 0xAA to this register will reset the chip
+     */
+    I2C_REG_RESET = 1,
 
-	/**
-	 * A read from this register will result in byte 'R' (reply)
-	 */
-	I2C_REG_PING = 2,
+    /**
+     * A read from this register will result in byte 'R' (reply)
+     */
+    I2C_REG_PING = 2,
 
-	/**
-	 * A read from this register will result in string 'PONG'.
-	 */
-	I2C_REG_PING_EX = 3,
+    /**
+     * A read from this register will result in string 'PONG'.
+     */
+    I2C_REG_PING_EX = 3,
 
-	/**
-	 * A read from this register will result in what ever was written to this register beforehand.  Limit of 8 bytes, please.
-	 */
-	I2C_REG_ECHO = 4,
+    /**
+     * A read from this register will result in what ever was written to this register beforehand.  Limit of 8 bytes, please.
+     */
+    I2C_REG_ECHO = 4,
 
-	/**
-	 * A read from this register will result in a user defined byte that defines the version of what ever this library is running on.  Defined in I2C_MODULE_VERSION
-	 */
-	I2C_REG_VERSION = 5,
+    /**
+     * A read from this register will result in a user defined byte that defines the version of what ever this library is running on.  Defined in I2C_MODULE_VERSION
+     */
+    I2C_REG_VERSION = 5,
 
-	/**
-	 * A read from this register will result in a string that identifies in a user friendly way what ever this library is and where it's running on.  Defines in I2C_MODULE_VERSION_STR
-	 */
-	I2C_REG_VERSION_STR = 6,
+    /**
+     * A read from this register will result in a string that identifies in a user friendly way what ever this library is and where it's running on.  Defines in I2C_MODULE_VERSION_STR
+     */
+    I2C_REG_VERSION_STR = 6,
 
-	/**
-	 * Number of defined registers.  Keeps manual math to a minimum
-	 */
-	I2C_REG_COUNT__	= 7
-} ;
+    /**
+     * Number of defined registers.  Keeps manual math to a minimum
+     */
+    I2C_REG_COUNT__ = 7
+};
 
 /**
  * Function pointer to a register write callback.
  * \param _idx Current ISR index.
  */
-typedef void (*i2c_cb_register_w)(UCHAR _byte, UINT _idx);
+typedef void (*i2c_cb_register_w )( UCHAR _byte, UINT _idx );
 
 /**
 Function pointer to a register-read callback function.
 \param _idx Current ISR index.
 \return Read byte
  */
-typedef UCHAR(*i2c_cb_register_r)(UINT _idx);
+typedef UCHAR( *i2c_cb_register_r )( UINT _idx );
 
 /**
 Result of the high-level read/write/read-write functions
  */
-typedef struct __i2c_result {
-	/**
-	Number of bytes read.  Should be compared against the expected number of bytes to be read to check for error in transmission
-	 */
-	UINT bytes_read;
+typedef struct __i2c_result
+{
+    /**
+    Number of bytes read.  Should be compared against the expected number of bytes to be read to check for error in transmission
+     */
+    UINT bytes_read;
 
-	/**
-	Number of bytes written.  Should be compared against the expected number of bytes to be written to check for error in transmission
-	 */
-	UINT bytes_written;
+    /**
+    Number of bytes written.  Should be compared against the expected number of bytes to be written to check for error in transmission
+     */
+    UINT bytes_written;
 
-	/**
-	Last write error
-	 */
-	UINT write_error;
+    /**
+    Last write error
+     */
+    UINT write_error;
 
-	/**
-	Last read error
-	 */
-	UINT read_error;
+    /**
+    Last read error
+     */
+    UINT read_error;
 } i2c_result;
 
 /**
 Definition of a register.
 Every implemented register is defined by this struct.
  */
-typedef struct {
-	/**
-	Read-only flag.
-	If 1 then the register is read-only
-	 */
-	UCHAR ro;
+typedef struct
+{
+    /**
+    Read-only flag.
+    If 1 then the register is read-only
+     */
+    UCHAR ro;
 
-	/**
-	Data buffer for the register.
-	 */
-	UCHAR * data;
+    /**
+    Data buffer for the register.
+     */
+    UCHAR * data;
 
-	/**
-	Data buffer length.
-	 */
-	UINT data_length;
+    /**
+    Data buffer length.
+     */
+    UINT data_length;
 
-	/**
-	Register write call-back.  The data buffer has priority.  Meaning that if data buffer is not zero the call-back will never be invoked.
-	 */
-	i2c_cb_register_w cb_write;
+    /**
+    Register write call-back.  The data buffer has priority.  Meaning that if data buffer is not zero the call-back will never be invoked.
+     */
+    i2c_cb_register_w cb_write;
 
-	/**
-	Register read call-back.  The data buffer has priority.  Meaning that if data buffer is not zero the call-back will never be invoked.
-	 */
-	i2c_cb_register_r cb_read;
+    /**
+    Register read call-back.  The data buffer has priority.  Meaning that if data buffer is not zero the call-back will never be invoked.
+     */
+    i2c_cb_register_r cb_read;
 } i2c_register;
 
 /**
  * All implemented registers that will be used by the library.
  */
-typedef struct {
-	/**
-	Number of implemented registers
-	 */
-	UCHAR count;
+typedef struct
+{
+    /**
+    Number of implemented registers
+     */
+    UCHAR count;
 
-	/**
-	Array of pointers to instances of implemented registers.
-	 */
-	i2c_register register_list[I2C_SLAVE_REGISTER_COUNT];
+    /**
+    Array of pointers to instances of implemented registers.
+     */
+    i2c_register register_list[I2C_SLAVE_REGISTER_COUNT];
 } i2c_register_list;
 
 
@@ -319,19 +328,19 @@ extern volatile i2c_register_list i2c_registers;
  * 	\param _brg Baud rate generator value.  Consult chip document
  * 	\note Call 	i2c_setup_default_registers or equivalent BEFORE calling this function.
  */
-extern void i2c_init(UCHAR _isr_priority, UCHAR _slave_address, UINT _brg);
+extern void i2c_init( UCHAR _isr_priority, UCHAR _slave_address, UINT _brg );
 
 /**
  * Returns the last encountered read error and clears the last read error.
  * \return Last read error
  */
-inline extern SINT i2c_last_read_error(void);
+inline extern SINT i2c_last_read_error( void );
 
 /**
  * Returns the last encountered write error and clears the last write error.
  * \return Last write error
  */
-inline extern SINT i2c_last_write_error(void);
+inline extern SINT i2c_last_write_error( void );
 
 /**
  * Starts the I2C bus.  Sets the I2CCON.SEN to 1 and waits for the bit to clear.
@@ -340,7 +349,7 @@ inline extern SINT i2c_last_write_error(void);
  * This is a 'level 0' function and should not be used directly in user code.
  * \return Returns a 1 if operation was successful, 0 if a master bus collision (I2CSTAT.BCL) was detected.
  */
-inline extern UCHAR i2c_bus_start(void);
+inline extern UCHAR i2c_bus_start( void );
 
 /**
  * Restarts the I2C bus.  Sets the I2CCON.RSEN to 1 and waits for the bit to clear.
@@ -349,7 +358,7 @@ inline extern UCHAR i2c_bus_start(void);
  * \return Returns a 1 if operation was successful, 0 if a master bus collision (I2CSTAT.BCL) was detected.
  * This is a 'level 0' function and should not be used directly in user code.
  */
-inline extern UCHAR i2c_bus_restart(void);
+inline extern UCHAR i2c_bus_restart( void );
 
 /**
  * Stops the I2C bus.  Sets the I2CCON.PEN to 1 and waits for the bit to clear.
@@ -358,7 +367,7 @@ inline extern UCHAR i2c_bus_restart(void);
  * \return Returns a 1 if operation was successful, 0 if a master bus collision (I2CSTAT.BCL) was detected.
  * This is a 'level 0' function and should not be used directly in user code.
  */
-inline extern UCHAR i2c_bus_stop(void);
+inline extern UCHAR i2c_bus_stop( void );
 
 /**
 Writes a byte to the bus. This function will be called by the master as all slave writes are done in the slave ISR.
@@ -377,7 +386,7 @@ This is a 'level 1' function
 \param _addr 7 bit address in unmolested form.  The r/w bit will be accounted for by the function
 \param _restart 1 if a 'restart' rather then a 'start' should be emitted
  */
-inline extern UCHAR i2c_write_control_byte(UCHAR _addr, UCHAR _restart);
+inline extern UCHAR i2c_write_control_byte( UCHAR _addr, UCHAR _restart );
 
 /**
 Writes a buffer to the bus. This function will be called by the master as all slave writes are done in the slave ISR.
@@ -388,7 +397,7 @@ This is a 'level 1' function.
 \param _data data to be written
 \param _count number of bytes to write.
  */
-extern UINT i2c_write_buffer(UCHAR * _data, UINT _count);
+extern UINT i2c_write_buffer( UCHAR * _data, UINT _count );
 
 /**
  * writes a buffer to the bus. The difference between this and the write_buffer function is that this function will send the control byte as well as the data.
@@ -400,7 +409,7 @@ extern UINT i2c_write_buffer(UCHAR * _data, UINT _count);
  * \return Number of bytes written.
  * \note This function will call i2c_bust_start and i2c_bus_stop.
  */
-extern UCHAR i2c_write_buffer_ex(UCHAR _address, UCHAR * _data, UINT _count, i2c_result * _res);
+extern UCHAR i2c_write_buffer_ex( UCHAR _address, UCHAR * _data, UINT _count, i2c_result * _res );
 
 /**
 Writes a stream of bytes to a slave, turns the bus around and then reads a stream of bytes from the slave. This function will be called by the master as all slave writes are done in the slave ISR.
@@ -413,22 +422,22 @@ Writes a stream of bytes to a slave, turns the bus around and then reads a strea
 \return 1 on complete success, 0 otherwise
 \note Because of the sequential nature of the operation the write and read buffers can be the same buffer assuming that overwriting of data is not an issue.
  */
-extern UCHAR i2c_write_read(UCHAR _address, UCHAR * _write_data, UINT _write_count, UCHAR * _read_buffer, UINT _read_count, i2c_result* _res);
+extern UCHAR i2c_write_read( UCHAR _address, UCHAR * _write_data, UINT _write_count, UCHAR * _read_buffer, UINT _read_count, i2c_result* _res );
 
 /**
 Sets up the default registers for the library.
  */
-extern void i2c_setup_default_registers(void);
+extern void i2c_setup_default_registers( void );
 
 /**
 Pauses the I2C module.  All setting are saved.
  */
-extern void i2c_pause_module(void);
+extern void i2c_pause_module( void );
 
 /**
 Resumes the I2C module.  All settings are restored.
  */
-extern void i2c_resume_module(void);
+extern void i2c_resume_module( void );
 
 /***************************************************************************
  *
@@ -478,12 +487,12 @@ extern void i2c_resume_module(void);
 /**
  * Apparently the symbol for ISR handler is not sucked in by the linker if nothing else is referenced in the object file.  So here is a symbol we will explicitly reference in the init code so that the ISR routine gets linked in.
  */
-extern void i2c_slave_isr_fixup(void);
+extern void i2c_slave_isr_fixup( void );
 
 /**
  * \see i2c_slave_isr_fixup
  */
-extern void i2c_master_isr_fixup(void);
+extern void i2c_master_isr_fixup( void );
 
 #endif
 /*
