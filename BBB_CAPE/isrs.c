@@ -51,11 +51,13 @@ void __attribute__( ( interrupt( auto_psv ) ) ) _CNInterrupt( void )
     // Pack all of the pin states into an integer.
     _g_cn_state = PIN_PACK_VALUES( );
 
+    // Clear change notification IFS flag
+    IFS1bits.CNIF = 0;
+    
     // Flag the state as changed.
     _g_cn_state_change = G_CN_STATE_CHANGE;
 
-    // Clear change notification IFS flag
-    IFS1bits.CNIF = 0;
+    return;
 }
 
 void __attribute__( ( interrupt( auto_psv ) ) ) _T2Interrupt( void )

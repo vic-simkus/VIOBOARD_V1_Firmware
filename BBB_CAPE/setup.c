@@ -51,7 +51,7 @@ void setup_control_pins( void )
 
     IFS1bits.CNIF = 0; // Clear change notification IFS flag
     IEC1bits.CNIE = 1; // Enable change notification interrupts
-
+    
     //IPC4bits.CNIP = 0x06  // Change notification ISR priority
 
     return;
@@ -225,21 +225,25 @@ void setup_pwm( void )
 }
 
 void setup_hmi_leds( void )
-{
+{  
+    PIN_HMI1_TRIS = 0;
+    PIN_HMI2_TRIS = 0;
+    PIN_HMI3_TRIS = 0;
+    PIN_HMI4_TRIS = 0;    
 
-    /*
-    TRISB &= 0x0FFF;
-
-    LATB |= 0xF000;
-
-    __delay_ms(250);
-
-    LATB &= 0x0FFF;
-
-    printf("HMI^");
-    putchar('\n');
-
-     */
+    PIN_HMI1 = 1;
+    PIN_HMI2 = 1;
+    PIN_HMI3 = 1;
+    PIN_HMI4 = 1;
+   
+      __delay_ms(250);
+    
+    PIN_HMI1 = 0;
+    PIN_HMI2 = 0;
+    PIN_HMI3 = 0;
+    PIN_HMI4 = 0;
+  
+    printf("HMI^\n");
     return;
 
 }

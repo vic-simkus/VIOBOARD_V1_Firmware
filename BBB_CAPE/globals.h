@@ -5,6 +5,7 @@
 
 #define GF_STATE_NONE		0			// No state.  Nothing is happening
 #define GF_STATE_HAVE_COMMAND	1			// Have received a CR.  Main loop will process
+#define GF_STATE_I2C		3
 
 #define G_CN_STATE_NONE		0
 #define G_CN_STATE_CHANGE	1

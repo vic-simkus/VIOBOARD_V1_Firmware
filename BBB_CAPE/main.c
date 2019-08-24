@@ -6,6 +6,8 @@
 #include "globals.h"
 #include "adc.h"
 
+#include "I2C.h"
+
 #include <stdio.h>	//printf
 #include <stdlib.h>
 #include <libpic30.h> //atoi
@@ -34,7 +36,7 @@ static void process_bbb_reset( void )
 static void dump_pwm_table( void )
 {
     unsigned int i = 0;
-    for(; i < PWM_PERC_ENTRIES; i++ )
+    for( ; i < PWM_PERC_ENTRIES; i++ )
     {
 	printf( "%3d: 0x%04X\n", i, _pwm_percent_table[i] );
     }
@@ -42,7 +44,7 @@ static void dump_pwm_table( void )
 
 static void dump_status_info( void )
 {
-    printf( "*** STATUS ***\n" );
+    printf( "***\n" );
 
     printf( "ADC step: %f V/step\n\n", ( double ) _g_v_per_ads );
 
@@ -62,53 +64,7 @@ static void dump_status_info( void )
     printf( "Vadc: %f V\n", ( double ) _g_adc_reading_v );
     printf( "I: %f A\n", ( double ) _g_curr_draw );
 
-    char aux_1 = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_AUX_1_MASK );
-    char aux_2 = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_AUX_2_MASK );
-    char enable = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_ENABLE_MASK );
-    char reset = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_RESET_MASK );
-    char power = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_POWER_MASK );
-
-    printf( "\nAUX_1: %d\n", aux_1 );
-    printf( "AUX_2: %d\n", aux_2 );
-    printf( "ENABLE: %d\n", enable );
-    printf( "RESET: %d\n", reset );
-    printf( "POWER: %d\n", power );
-
-    putchar( '\n' );
-
-    printf( "*** STATUS ***\n" );
-
-    return;
-}
-
-static void process_cmd_set_duty( void )
-{
-    if( _cmd_buffer_idx >= 6 || _cmd_buffer_idx < 3 )
-    {
-	printf( "Input error.\n" );
-	return;
-    }
-
-    unsigned int duty_percent = ( unsigned int ) atoi( ( const char * ) _cmd_buffer + 2 );
-
-    if( duty_percent > 100 )
-    {
-	printf( "Input error.\n" );
-	duty_percent = 0;
-    }
-
-    if( duty_percent == 0 )
-    {
-	_g_manual_drive = 0;
-    }
-    else
-    {
-	_g_manual_drive = 1;
-    }
-
-    pwm_set_duty_cycle_percent( duty_percent );
-
-    printf( "Duty: %d%%\n", duty_percent );
+    printf( "***\n" );
 
     return;
 }
@@ -129,13 +85,15 @@ int main( void )
     adc_setup( );
     setup_control_pins( );
     setup_serial( );
-    setup_heart_beat( );
-    setup_hmi_leds( );
-    setup_control_timer( ); // Starts the output drive
-
+    //setup_control_timer( ); // Starts the output drive
     pwm_set_duty_cycle( 0 );
 
-    printf( "\nReady.\n" );
+    setup_heart_beat( );
+    setup_hmi_leds( );
+
+    i2c_init( 5, 0x54 );
+
+    printf( "\nR\n" );
 
     char aux_1 = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_AUX_1_MASK );
     char aux_2 = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_AUX_2_MASK );
@@ -143,7 +101,7 @@ int main( void )
     char reset = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_RESET_MASK );
     char power = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_POWER_MASK );
 
-    for(;; )
+    for( ; ; )
     {
 	while( _cmd_state != GF_STATE_HAVE_COMMAND )
 	{
@@ -158,11 +116,11 @@ int main( void )
 		power = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_POWER_MASK );
 
 		printf( "CN: " );
-		printf( "  AUX_1: %d ", aux_1 );
-		printf( "  AUX_2: %d ", aux_2 );
-		printf( "  ENABLE: %d ", enable );
-		printf( "  RESET: %d ", reset );
-		printf( "  POWER: %d ", power );
+		printf( "  A1: %d ", aux_1 );
+		printf( "  A2: %d ", aux_2 );
+		printf( "  E: %d ", enable );
+		printf( "  R: %d ", reset );
+		printf( "  P: %d ", power );
 
 		putchar( '\n' );
 	    }
@@ -229,14 +187,14 @@ int main( void )
 		    enable = 0;
 		    break;
 		case '?':
-		    printf( "*** ? ***\n" );
-		    printf( "b - Toggle BBB reset line\n" );
+		    printf( "* ? *\n" );
+		    printf( "b - Toggle reset line\n" );
 		    printf( "s - Status\n" );
 		    printf( "t - PWM table\n" );
-		    printf( "r - Reset VPSB\n" );
-		    printf( "e - Enable output\n" );
-		    printf( "d - Disable output\n" );
-		    printf( "*** ? ***\n" );
+		    printf( "r - Reset\n" );
+		    printf( "e - Enable \n" );
+		    printf( "d - Disable ''\n" );
+		    printf( "* ? *\n" );
 		    break;
 		default:
 		    printf( "!\n" );
@@ -245,20 +203,8 @@ int main( void )
 	}
 	else
 	{
-	    /*
-	     * Multiple character command
-	     */
+	    printf( "!!\n" );
 
-	    switch( _cmd_buffer[0] )
-	    {
-		case 'd':
-		    process_cmd_set_duty( );
-		    break;
-		default:
-		    printf( "!!\n" );
-		    break;
-
-	    }
 	}
 
 	_cmd_buffer_idx = 0;
