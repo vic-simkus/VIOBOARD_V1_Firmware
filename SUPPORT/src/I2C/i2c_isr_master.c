@@ -18,7 +18,7 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 #include "I2C/i2c.h"
 #include <xc.h>
 
-__attribute__((interrupt, shadow, no_auto_psv)) void MASTER_INTERRUPT(void)
+__attribute__((interrupt, shadow, no_auto_psv)) void I2C_MASTER_INTERRUPT(void)
 {
 	// Reset the ISR flag.
 	MASTER_IF = 0;

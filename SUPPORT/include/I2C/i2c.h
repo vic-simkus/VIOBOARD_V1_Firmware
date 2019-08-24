@@ -30,6 +30,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
  * 'Level 0' functions are the lowest level functions that interface directly with the hardware (for what little interface there is actually to be done). Rarely should level 0 functions be used in 'user' code.
  * 'Level 1' functions are higher level functions that rely on level 0 functions. These also should be used with caution in user code.
  * 'Level 2' functions are the highest level functions intended to be used with wild abandon in user code.  All timing, bus states, etc are taken care of.
+ * 
+ * XX -- Document register count
  */
 
 #include "data_types.h"
@@ -77,27 +79,27 @@ Change definition to match those of the dsPIC30F4011 to make porting easier
 #define I2CADD		I2C1ADD
 #define I2CMSK		I2C1MSK
 
-#define SLAVE_INTERRUPT		_SI2C1Interrupt
-#define MASTER_INTERRUPT	_MI2C1Interrupt
+#define I2C_SLAVE_INTERRUPT	_SI2C1Interrupt
+#define I2C_MASTER_INTERRUPT	_MI2C1Interrupt
 
 #else
 /*
 This is a dsPIC30 device
  */
 
-#define SLAVE_IPC	_SI2CIP
+#define SLAVE_IPC		_SI2CIP
 #define	MASTER_IPC	_MI2CIP
 
 #define	SLAVE_IEC	_SI2CIE
 #define MASTER_IEC	_MI2CIE
 
-#define	SLAVE_IF	_SI2CIF
-#define MASTER_IF	_MI2CIF
+#define	SLAVE_IF		_SI2CIF
+#define MASTER_IF		_MI2CIF
 
 #define	I2CBRG 		I2CBRG
 
-#define SLAVE_INTERRUPT			_SI2CInterrupt
-#define MASTER_INTERRUPT		_MI2CInterrupt
+#define I2C_SLAVE_INTERRUPT	_SI2CInterrupt
+#define I2C_MASTER_INTERRUPT	_MI2CInterrupt
 #endif
 
 #ifdef I2C_FO
@@ -148,12 +150,25 @@ I2C Master will be reading from slave
 #define I2C_RW_R	1
 
 /**
+\ingroup BUS_DA
+ * Last byte was address (compared against I2CSTATbits.D_NOT_A )
+ */
+#define I2C_DA_A	0
+
+/**
+\ingroup BUS_DA
+ * Last byte was data (compared against I2CSTATbits.D_NOT_A )
+ */
+#define I2C_DA_D	1
+
+
+/**
  * The I2C_SLAVE_REGISTER_COUNT is expected to be defined by the user of the library (in the project config, for example).
  * The number is expected to be the TOTAL number of I2C registers. I.e. I2C_REG_COUNT__	 + <number of custom register>
  * So if I2C_REG_COUNT__ is 7 and the using code implements 3 more custom registers, this define should be set to 10.
  */
 #ifndef I2C_SLAVE_REGISTER_COUNT
-#error "Must define I2C_SLAVE_REGISTER_COUNT"
+    #error "Must define I2C_SLAVE_REGISTER_COUNT"
 #endif
 
 #define I2C_BUS_RETRIES 10
