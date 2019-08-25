@@ -65,8 +65,9 @@ void __attribute__( ( interrupt( auto_psv ) ) ) _T2Interrupt( void )
     /*
      * Control loop timer ISR.
      */
-    //PORTBbits.RB13 = !PORTBbits.RB13;
 
+    PIN_HMI4 ^= 1;
+	
     _g_adc_reading_v = _g_v_per_ads * ( float ) _g_adc_reading_avg;
     _g_curr_draw = _g_adc_reading_v / _g_i_calc_denom;
 

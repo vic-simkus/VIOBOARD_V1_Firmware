@@ -58,13 +58,13 @@ void setup_control_pins( void )
 }
 
 void setup_control_timer( void )
-{
+{   
     T2CON = 0; // SOP
-    T2CONbits.TCKPS = 1; // 1:8 prescaler
-    PR2 = 19841; // We want the timer to fire 100 timer per second - 100Hz
-    // Our Tcy is 63nS or 0.000,000,063 of a second
-    // Prescaler i 8
-    // ((1÷100)÷0.000,000,063)÷8
+    T2CONbits.TCKPS = 0b11;	// 1:256 prescaler
+    PR2 = 12400;		// We want the timer to fire 5 times per second - 5Hz
+			// Our Tcy is 63nS or 0.000,000,063 of a second
+			// Prescaler is 256
+			// ((1÷5)÷0.000,000,063)÷256 = 12400
 
     IPC1bits.T2IP = 5; // Set T2 timer interrupt priority
     IFS0bits.T2IF = 0; // Clear interrupt flag just in case

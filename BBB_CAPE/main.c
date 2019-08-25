@@ -16,16 +16,21 @@ static void process_bbb_reset( void )
 {
     char reset = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_RESET_MASK );
 
+    PIN_HMI1 = 0;
+    PIN_HMI2 = 0;
+    PIN_HMI3 = 0;
+    PIN_HMI4 = 0;
+    
     if( reset == 0 )
     {
 	// Reset line is low.  BBB is held in reset
-	printf( "\nRESET is low.  Will raise.\n" );
+	printf( "\nPU reset.\n" );
 	PIN_BBB_RESET = 1;
     }
     else
     {
 	// Reset line is high.  BBB is operational
-	printf( "\nRESET is high.  Will pull down.\n" );
+	printf( "\nPD reset.\n" );
 	PIN_BBB_RESET = 0;
     }
 
@@ -85,7 +90,7 @@ int main( void )
     adc_setup( );
     setup_control_pins( );
     setup_serial( );
-    //setup_control_timer( ); // Starts the output drive
+    setup_control_timer( ); // Starts the output drive
     pwm_set_duty_cycle( 0 );
 
     setup_heart_beat( );
