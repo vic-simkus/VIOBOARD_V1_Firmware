@@ -20,8 +20,9 @@ volatile uint16_t _g_enable_drive = 0;
 const float _g_pwm_1_percent;
 volatile float _g_adc_reading_v = 0;
 volatile float _g_curr_draw = 0;
+volatile float _g_curr_offset = 0;
 
-// 0.0002000 = 200uA/V from the TI INA138 current shunt monitor.
+// 0.000200 = 200uA/V from the TI INA138 current shunt monitor.
 const float _g_i_calc_denom = SENSE_RESISTOR * 0.000200 * GAIN_RESISTOR;
 const float _g_v_per_ads = ( 3.3006F / ( float ) 4095 );
 volatile float _g_adc_reading_avg = 0;

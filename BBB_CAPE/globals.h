@@ -113,5 +113,7 @@ volatile extern uint16_t _g_enable_drive;
 
 volatile extern uint16_t _g_manual_drive;
 
+extern volatile float _g_curr_offset;
+
 #endif	/* GLOBALS_H */
 

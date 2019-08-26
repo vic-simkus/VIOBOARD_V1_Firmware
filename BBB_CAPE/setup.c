@@ -66,7 +66,7 @@ void setup_control_timer( void )
 			// Prescaler is 256
 			// ((1÷5)÷0.000,000,063)÷256 = 12400
 
-    IPC1bits.T2IP = 5; // Set T2 timer interrupt priority
+    IPC1bits.T2IP = 6; // Set T2 timer interrupt priority.  One lower than the ADC ISR
     IFS0bits.T2IF = 0; // Clear interrupt flag just in case
     IEC0bits.T2IE = 1; // Turn on the interrupt
 

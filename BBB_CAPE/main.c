@@ -20,7 +20,7 @@ static void process_bbb_reset( void )
     PIN_HMI2 = 0;
     PIN_HMI3 = 0;
     PIN_HMI4 = 0;
-    
+
     if( reset == 0 )
     {
 	// Reset line is low.  BBB is held in reset
@@ -59,11 +59,7 @@ static void dump_status_info( void )
     }
     else
     {
-
 	printf( "Drive is ENABLED\n" );
-
-	printf( "PWMd: %03u%%", _g_pwm_percent );
-	printf( "   PWMf: %f%%\n", ( double ) _g_pwm_percent_f );
     }
 
     printf( "Vadc: %f V\n", ( double ) _g_adc_reading_v );
@@ -87,7 +83,6 @@ int main( void )
 
     setup_clock( );
     setup_pwm( );
-    adc_setup( );
     setup_control_pins( );
     setup_serial( );
     setup_control_timer( ); // Starts the output drive
@@ -97,6 +92,8 @@ int main( void )
     setup_hmi_leds( );
 
     i2c_init( 5, 0x54 );
+
+    adc_setup( );
 
     printf( "\nR\n" );
 
@@ -134,10 +131,6 @@ int main( void )
 	    {
 		_g_enable_drive = 0;
 		PIN_RS232_ENABLE = 0;
-
-		_g_adc_reading_avg = 0;
-		AD1CON1bits.ASAM = 0;
-		adc_setup_for_ss( );
 	    }
 	    else
 	    {
@@ -145,8 +138,6 @@ int main( void )
 		{
 		    _g_enable_drive = 1;
 		    PIN_RS232_ENABLE = 1;
-		    //adc_setup_for_cont( );
-		    //AD1CON1bits.ASAM = 1;
 		}
 	    }
 	}
@@ -179,6 +170,9 @@ int main( void )
 		     * Dump PWM table
 		     */
 		    dump_pwm_table( );
+		    break;
+		case 'c':
+		    _g_curr_offset = 0 - _g_curr_draw;
 		    break;
 		case 'r':
 		    __asm__ volatile ("reset" );

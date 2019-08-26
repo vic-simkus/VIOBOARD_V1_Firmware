@@ -39,7 +39,7 @@ void adc_setup( void )
 
     AD1CON1bits.FORM = 0x0; // Absolute decimal result, unsigned, right justified
     AD1CON1bits.SSRC = 0b0111; // Internal counter ends sampling
-    AD1CON1bits.ASAM = 0; // Sampling starts when SAMP bit is manually set
+    AD1CON1bits.ASAM = 1; // Sampling starts when SAMP bit is manually set
     AD1CON1bits.MODE12 = 1; // According to the data sheet we don't have this option.
 
     AD1CON2bits.PVCFG = 0x01; // Positive reference = External Vref+
@@ -62,33 +62,15 @@ void adc_setup( void )
     TRISAbits.TRISA1 = 1; // AN11 is an input
     ANSAbits.ANSA1 = 1; // AN1 is analog input
 
-    adc_setup_for_ss( );
-
-
-    AD1CON1bits.ADON = 1; // Enable the AD module
-
-    return;
-
-}
-
-void adc_setup_for_ss( void )
-{
-    AD1CON2bits.SMPI = 0; // Interrupt every conversion
-    IFS0bits.AD1IF = 0; // Reset AD interrupt flag
-    IPC3bits.AD1IP = 0; // Highest priority
-    IEC0bits.AD1IE = 0; // Enable AD interrupts
-
-    return;
-}
-
-void adc_setup_for_cont( void )
-{
     AD1CON2bits.SMPI = 7; // Interrupt every eigth
     IFS0bits.AD1IF = 0; // Reset AD interrupt flag
     IPC3bits.AD1IP = 7; // Highest priority
     IEC0bits.AD1IE = 1; // Enable AD interrupts
+    
+    AD1CON1bits.ADON = 1; // Enable the AD module
 
     return;
+
 }
 
 #define CHSA_VBG 0b11010

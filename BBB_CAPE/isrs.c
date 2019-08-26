@@ -13,9 +13,19 @@ void __linker_fixup_isr( void )
 
 volatile uint16_t _htbt_direction = HTBT_DIRECTION_UP;
 volatile uint16_t _htbt_pause = 0;
+volatile uint16_t _adc_counter = 0;
 
 void __attribute__( ( interrupt( auto_psv ) ) ) _ADC1Interrupt( void )
 {
+    _adc_counter += 1;
+    
+    if(_adc_counter == 100)
+    {
+	PIN_HMI3 ^= 1;
+	
+	_adc_counter = 0;
+    }
+    
     _g_adc_reading_avg = ADC1BUF0;
     _g_adc_reading_avg += ADC1BUF1;
     _g_adc_reading_avg += ADC1BUF2;
@@ -24,16 +34,6 @@ void __attribute__( ( interrupt( auto_psv ) ) ) _ADC1Interrupt( void )
     _g_adc_reading_avg += ADC1BUF5;
     _g_adc_reading_avg += ADC1BUF6;
     _g_adc_reading_avg += ADC1BUF7;
-    /*
-	_g_adc_reading_avg += ADC1BUF8;
-	_g_adc_reading_avg += ADC1BUF9;
-	_g_adc_reading_avg += ADC1BUF10;
-	_g_adc_reading_avg += ADC1BUF11;
-	_g_adc_reading_avg += ADC1BUF12;
-	_g_adc_reading_avg += ADC1BUF13;
-	_g_adc_reading_avg += ADC1BUF14;
-	_g_adc_reading_avg += ADC1BUF15;
-     */
 
     _g_adc_reading_avg = _g_adc_reading_avg / 8.0F;
 
@@ -53,7 +53,7 @@ void __attribute__( ( interrupt( auto_psv ) ) ) _CNInterrupt( void )
 
     // Clear change notification IFS flag
     IFS1bits.CNIF = 0;
-    
+
     // Flag the state as changed.
     _g_cn_state_change = G_CN_STATE_CHANGE;
 
@@ -67,34 +67,20 @@ void __attribute__( ( interrupt( auto_psv ) ) ) _T2Interrupt( void )
      */
 
     PIN_HMI4 ^= 1;
-	
+
     _g_adc_reading_v = _g_v_per_ads * ( float ) _g_adc_reading_avg;
     _g_curr_draw = _g_adc_reading_v / _g_i_calc_denom;
+    _g_curr_draw += _g_curr_offset;
 
-    float output = _g_pwm_percent_f;
-
-    if( _g_manual_drive == 0 )
+    if( _g_enable_drive == 1 )
     {
-	if( _g_enable_drive == 1 )
-	{
-	    if( output < 100 )
-	    {
-		output += 1;
-
-		if( output > 100 )
-		{
-		    output = 100;
-		}
-
-		pwm_set_duty_cycle_percent_f( output );
-	    }
-	}
-	else
-	{
-	    pwm_set_duty_cycle( 0 );
-	    _g_pwm_percent_f = 0;
-	    _g_pwm_percent = 0;
-	}
+	pwm_set_duty_cycle_percent_f( 100 );
+    }
+    else
+    {
+	pwm_set_duty_cycle( 0 );
+	_g_pwm_percent_f = 0;
+	_g_pwm_percent = 0;
     }
 
     IFS0bits.T2IF = 0; // Reset ISR flag

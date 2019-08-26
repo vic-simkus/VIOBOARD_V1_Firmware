@@ -114,8 +114,8 @@
 #define PWM_PERIOD		0x7FFF
 
 
-#define SENSE_RESISTOR	0.010
-#define GAIN_RESISTOR	240000
+#define SENSE_RESISTOR	((float)1.5)
+#define GAIN_RESISTOR	((float)49900)
 
 #define PIN_AUX1		PORTBbits.RB3      //PIN 07 -- RB3 -- CN7 (CNPD1)
 #define PIN_AUX2		PORTAbits.RA2      //PIN 09 -- RA2 -- CN30 (CNPD2)
