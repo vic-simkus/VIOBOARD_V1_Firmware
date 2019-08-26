@@ -1,3 +1,22 @@
+/*
+Vic's IO Board V1; Firmware
+
+Copyright (C) 2019 Vidas Simkus (vic.simkus@simkus.com)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "adc.h"
 #include "globals.h"
 
@@ -71,42 +90,4 @@ void adc_setup( void )
 
     return;
 
-}
-
-#define CHSA_VBG 0b11010
-#define CHSA_AVDD 0b11101
-
-double adc_s_get_internal_bandgap( void )
-{
-    uint16_t ad1chs_save = AD1CHS;
-    ADC1BUF0 = 0;
-
-    AD1CHSbits.CH0SA = CHSA_VBG;
-
-    AD1CON1bits.SAMP = 1;
-
-    WAIT_FOR_ADC;
-
-    AD1CHS = ad1chs_save;
-    return _g_v_per_ads * ( float ) ADC1BUF0;
-}
-
-extern double adc_s_get_vdd( void )
-{
-    uint16_t ad1chs_save = AD1CHS;
-    ADC1BUF0 = 0;
-
-    AD1CHSbits.CH0SA = CHSA_AVDD;
-
-    AD1CON1bits.SAMP = 1;
-
-    WAIT_FOR_ADC;
-
-    AD1CHS = ad1chs_save;
-    return _g_v_per_ads * ( float ) ADC1BUF0;
-}
-
-extern double adc_s_get_av( void )
-{
-    return _g_v_per_ads * ( float ) _g_adc_reading_avg;
 }

@@ -1,3 +1,22 @@
+/*
+Vic's IO Board V1; Firmware
+
+Copyright (C) 2019 Vidas Simkus (vic.simkus@simkus.com)
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 #include "setup.h"
 #include <libpic30.h>
 #include <math.h>
@@ -51,20 +70,20 @@ void setup_control_pins( void )
 
     IFS1bits.CNIF = 0; // Clear change notification IFS flag
     IEC1bits.CNIE = 1; // Enable change notification interrupts
-    
+
     //IPC4bits.CNIP = 0x06  // Change notification ISR priority
 
     return;
 }
 
 void setup_control_timer( void )
-{   
+{
     T2CON = 0; // SOP
     T2CONbits.TCKPS = 0b11;	// 1:256 prescaler
     PR2 = 12400;		// We want the timer to fire 5 times per second - 5Hz
-			// Our Tcy is 63nS or 0.000,000,063 of a second
-			// Prescaler is 256
-			// ((1÷5)÷0.000,000,063)÷256 = 12400
+    // Our Tcy is 63nS or 0.000,000,063 of a second
+    // Prescaler is 256
+    // ((1÷5)÷0.000,000,063)÷256 = 12400
 
     IPC1bits.T2IP = 6; // Set T2 timer interrupt priority.  One lower than the ADC ISR
     IFS0bits.T2IF = 0; // Clear interrupt flag just in case
@@ -225,25 +244,25 @@ void setup_pwm( void )
 }
 
 void setup_hmi_leds( void )
-{  
+{
     PIN_HMI1_TRIS = 0;
     PIN_HMI2_TRIS = 0;
     PIN_HMI3_TRIS = 0;
-    PIN_HMI4_TRIS = 0;    
+    PIN_HMI4_TRIS = 0;
 
     PIN_HMI1 = 1;
     PIN_HMI2 = 1;
     PIN_HMI3 = 1;
     PIN_HMI4 = 1;
-   
-      __delay_ms(250);
-    
+
+    __delay_ms( 250 );
+
     PIN_HMI1 = 0;
     PIN_HMI2 = 0;
     PIN_HMI3 = 0;
     PIN_HMI4 = 0;
-  
-    printf("HMI^\n");
+
+    printf( "HMI^\n" );
     return;
 
 }
