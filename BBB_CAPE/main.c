@@ -66,11 +66,11 @@ static void dump_status_info( void )
 
     if( _g_enable_drive == 0 )
     {
-	printf( "Drive is ON\n" );
+	printf( "Drive is OFF\n" );
     }
     else
     {
-	printf( "Drive is OFF\n" );
+	printf( "Drive is ON\n" );
     }
 
     printf( "ADC step: %f V/step\n\n", ( double ) _g_v_per_ads );
