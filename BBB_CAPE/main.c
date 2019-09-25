@@ -108,6 +108,28 @@ int main( void )
     adc_setup( );
 
     printf( "\nR\n" );
+   
+    PIN_HMI1 = 1;
+    PIN_HMI2 = 0;
+    printf("*");
+   __delay_ms( 250 );
+   
+   PIN_HMI1 = 0;
+   PIN_HMI2 = 1;
+   printf("*");
+   __delay_ms( 250 );
+   
+   PIN_HMI1 = 1;
+   PIN_HMI2 = 1;
+   printf("*");
+   __delay_ms( 250 );
+   
+   _g_curr_offset = 0 - _g_curr_draw;
+
+   printf("\n");
+   
+   PIN_BBB_RESET = 1;
+    
 
     char aux_1 = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_AUX_1_MASK );
     char aux_2 = PIN_CHECK_VALUE( _g_cn_state, G_CN_PIN_AUX_2_MASK );
