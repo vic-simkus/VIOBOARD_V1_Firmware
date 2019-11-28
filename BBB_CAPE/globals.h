@@ -45,6 +45,8 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 #define OP_AMP_GAIN	((float)4.1290106952)
 
+#define VERSION "V1.7"
+
 /**
  * Current state of the command processor.  Updated in the serial receive ISR.
  */
